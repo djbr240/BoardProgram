@@ -11,6 +11,7 @@ import neopixel
 from utime import sleep
 import utime
 from mfrc522 import MFRC522
+import random
 
 ################################################################
 #   Configuration
@@ -57,7 +58,7 @@ Spinner_pixels = neopixel.NeoPixel(SpinnerLED_pin, SpinnerLED_num_pixels)
 # Mux configuration
 
 hall_sensor_threshold = 500
-button_threshold = 50
+button_threshold = 500
 
 # Initialize ADC for MUX SIG output
 ADC0_MUX1 = ADC(Pin(26))  # ADC pin connected to the MUX SIG output
@@ -91,17 +92,107 @@ RFIDreader = MFRC522(spi_id=0,sck=2,miso=0,mosi=3,cs=1,rst=16)
 
 ################################################################
 # The following functions are LED animations
-def playSpinnerSpinAnimation():
-    # Keep in mind that the spinner is LEDs 42-47
-    # Flash the spinner LEDs in sequence, slowing down gradually by increasing the delay
-    delay = 0.1
-    for i in range(42, 48):
-        Board_Spinner_pixels[i] = (255, 0, 0)
+
+# Define LED colors for the sequence
+LED_COLORS = {
+    0: (255, 255, 255),  # White
+    1: (0, 0, 255),      # Blue
+    2: (0, 0, 255),      # Blue
+    3: (255, 255, 0),    # Yellow
+    4: (0, 0, 255),      # Blue
+    5: (0, 0, 255)       # Blue
+}
+
+def is_spinner_button_pressed():
+    select_mux_channel(MUX3_select_pins, 15)  # Select Channel 15
+    #print(ADC2_MUX3.read_u16())
+    return ADC2_MUX3.read_u16() < button_threshold
+
+def playSpinnerSpinAndStop():
+    delay = 0.01  # Starting delay
+    spinner_start_index = 42  # First index of spinner LEDs
+    total_spinner_leds = 6  # Total spinner LEDs
+    random_stop = random.randint(0, total_spinner_leds - 1)  # Random stopping position within spinner LEDs
+    slowing_factor = 0.01  # How much to increase the delay each time
+    current_led = 0  # Start at the first spinner LED
+
+    # Gradually slow down while spinning
+    while delay < 0.2:
+        # Turn off all spinner LEDs
+        for j in range(total_spinner_leds):
+            Board_Spinner_pixels[spinner_start_index + j] = (0, 0, 0)
+
+        # Light up the current spinner LED using the color from LED_COLORS
+        Board_Spinner_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
         Board_Spinner_pixels.write()
         sleep(delay)
-        Board_Spinner_pixels[i] = (0, 0, 0)
+
+        # Move to the next spinner LED
+        current_led = (current_led + 1) % total_spinner_leds
+
+        # Gradually increase the delay
+        delay += slowing_factor
+
+    # Ensure the spinner stops at the random position
+    while current_led != random_stop:
+        # Turn off all spinner LEDs
+        for j in range(total_spinner_leds):
+            Board_Spinner_pixels[spinner_start_index + j] = (0, 0, 0)
+
+        # Light up the current spinner LED
+        Board_Spinner_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
         Board_Spinner_pixels.write()
-        delay += 0.1
+        sleep(delay)
+
+        # Move to the next spinner LED
+        current_led = (current_led + 1) % total_spinner_leds
+
+    # Handle the final spinner stop actions
+    for j in range(total_spinner_leds):
+        Board_Spinner_pixels[spinner_start_index + j] = (0, 0, 0)  # Turn off all LEDs
+
+    # Determine behavior based on the stopping position
+    final_led_index = spinner_start_index + random_stop
+    if random_stop == 0:
+        # Make LED white and return "white"
+        Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
+        Board_Spinner_pixels.write()
+        return "white"
+    elif random_stop in {1, 4}:
+        # Make LED blue and blink 2 times, return 2
+        for _ in range(2):
+            Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_Spinner_pixels.write()
+            sleep(0.3)
+            Board_Spinner_pixels[final_led_index] = (0, 0, 0)
+            Board_Spinner_pixels.write()
+            sleep(0.3)
+        return 2
+    elif random_stop == 2:
+        # Make LED blue and blink 4 times, return 4
+        for _ in range(4):
+            Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_Spinner_pixels.write()
+            sleep(0.3)
+            Board_Spinner_pixels[final_led_index] = (0, 0, 0)
+            Board_Spinner_pixels.write()
+            sleep(0.3)
+        return 4
+    elif random_stop == 3:
+        # Make LED yellow and return "yellow"
+        Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
+        Board_Spinner_pixels.write()
+        return "yellow"
+    elif random_stop == 5:
+        # Make LED blue and blink 3 times, return 3
+        for _ in range(3):
+            Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_Spinner_pixels.write()
+            sleep(0.3)
+            Board_Spinner_pixels[final_led_index] = (0, 0, 0)
+            Board_Spinner_pixels.write()
+            sleep(0.3)
+        return 3
 
 ################################################################
 
@@ -141,13 +232,9 @@ class Player:
 
     def __str__(self):
         return f"Player {self.pieceID} is at position {self.position} with clues {self.cluesFound}"
-
-# Example usage:
-#player1 = Player("A1")
-#player1.add_clue(5)
-#player1.move(10)
-#print(player1)
-
+    
+    # End player class
+################################################################
 
 # This function goes through every channel in the MUXs and checks all readings from the Hall Sensors
 # It then returns a list of all the Hall Sensors that detected a magnetic presence
@@ -205,26 +292,26 @@ def read_hall_sensors():
 # MUX3 Channel 15 = Potentiometer
 def readPotentiometer():
     # Read MUX3 Channel 15
-    select_mux_channel(MUX3_select_pins, 15)
+    select_mux_channel(MUX3_select_pins, 10)
     adc_value = ADC2_MUX3.read_u16()  # Read ADC value
     return adc_value  # Return the Potentiometer value
 
 # Reads MUX3 Channels 10-15 to see if a button is pressed. Return the button number pressed
 def readButtons():
-    # Read MUX3 Channels 10-15
-    select_mux_channel(MUX3_select_pins, 10)
+    # Read MUX3 Channels 11-15
+    select_mux_channel(MUX3_select_pins, 11)
     button1_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
-    select_mux_channel(MUX3_select_pins, 11)
+    select_mux_channel(MUX3_select_pins, 12)
     button2_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
-    select_mux_channel(MUX3_select_pins, 12)
+    select_mux_channel(MUX3_select_pins, 13)
     button3_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
-    select_mux_channel(MUX3_select_pins, 13)
+    select_mux_channel(MUX3_select_pins, 14)
     button4_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
-    select_mux_channel(MUX3_select_pins, 14)
+    select_mux_channel(MUX3_select_pins, 15)
     button5_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
     buttonPressed = 0
@@ -291,7 +378,8 @@ def testFunction():
     print("2: Test panel LEDs")
     print("3: Test pathfinder")
     print("4: RFID options")
-    print("5: Hall Sensor test\n")
+    print("5: Hall Sensor test")
+    print("6: Test spinner")
     
     # Get user input
     user_input = input("Enter your choice: ")
@@ -377,6 +465,17 @@ def testFunction():
                     Board_Spinner_pixels[i] = (0, 0, 0)  # Off if not detected
             Board_Spinner_pixels.write()
             sleep(0.1)
+
+    elif user_input == "6":
+        print("Waiting for button press to spin...")
+        while True:
+            btnInput = readButtons()
+            print(readButtons())
+            if btnInput == 5:
+                print("Button pressed! Spinning...")
+                result = playSpinnerSpinAndStop()
+                print(f"Spinner result: {result}")
+                sleep(0.5)  # Debounce delay to avoid multiple spins
             
     else:
         print("Invalid choice. Please try again.")
