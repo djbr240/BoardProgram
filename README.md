@@ -1,0 +1,3 @@
+boardProgram.py is the main program and should have everything added to it. In order to run the main program, mfrc522.py must be uploaded to the Pico first.
+
+All other files are discrete tests and are not really needed. If you decide to use them, a forewarning that multiple things may be wrong such as Pin assignments and LED count.
