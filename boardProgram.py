@@ -40,19 +40,20 @@ PanelLED4_num_pixels = 26
 PanelLED4_pin = Pin(18, Pin.OUT)
 Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 
-PanelLED5_num_pixels = 26
-PanelLED5_pin = Pin(17, Pin.OUT)
-Panel5_pixels = neopixel.NeoPixel(PanelLED5_pin, PanelLED5_num_pixels)
+# We currently don't have a solution for having a 5th panel (out of pins)
+#PanelLED5_num_pixels = 26
+#PanelLED5_pin = Pin(17, Pin.OUT)
+#Panel5_pixels = neopixel.NeoPixel(PanelLED5_pin, PanelLED5_num_pixels)
 
 # We currently don't have a solution for having a 6th panel (out of pins)
 #PanelLED6_num_pixels = 26
 #PanelLED6_pin = Pin(26, Pin.OUT)
 #Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
-# Spinner LED config
-SpinnerLED_num_pixels = 6
-SpinnerLED_pin = Pin(17, Pin.OUT)
-Spinner_pixels = neopixel.NeoPixel(SpinnerLED_pin, SpinnerLED_num_pixels)
+# Spinner LED config (This is part of board leds)
+#SpinnerLED_num_pixels = 6
+#SpinnerLED_pin = Pin(17, Pin.OUT)
+#Spinner_pixels = neopixel.NeoPixel(SpinnerLED_pin, SpinnerLED_num_pixels)
 
 
 # Mux configuration
@@ -108,6 +109,7 @@ def is_spinner_button_pressed():
     #print(ADC2_MUX3.read_u16())
     return ADC2_MUX3.read_u16() < button_threshold
 
+# Randomly generate a number, while also making a spinning animation. Return what the spinner lands on
 def playSpinnerSpinAndStop():
     delay = 0.01  # Starting delay
     spinner_start_index = 42  # First index of spinner LEDs
@@ -284,12 +286,12 @@ def read_hall_sensors():
 # Since for MUX3 channels 10-15, we are using those for Potentiometer and Button readings, we need a function to go through those MUX3 Channels
 # We want to have Potentiometer and Buttons separated since they're doing significantly different functions
 # This is a map of those assignments:
-# MUX3 Channel 10 = Button1
+# MUX3 Channel 10 = Potentiometer
 # MUX3 Channel 11 = Button2
 # MUX3 Channel 12 = Button3
 # MUX3 Channel 13 = Button4
 # MUX3 Channel 14 = Button5
-# MUX3 Channel 15 = Potentiometer
+# MUX3 Channel 15 = Spinner Button
 def readPotentiometer():
     # Read MUX3 Channel 15
     select_mux_channel(MUX3_select_pins, 10)
@@ -323,6 +325,19 @@ def readButtons():
     
     
     return buttonPressed
+
+def readRFID():
+    while True:
+        # Read RFID and print to console
+        RFIDreader.init()
+        (stat, tag_type) = RFIDreader.request(RFIDreader.REQIDL)
+        if stat == RFIDreader.OK:
+            (stat, uid) = RFIDreader.SelectTagSN()
+            if stat == RFIDreader.OK:
+                card = int.from_bytes(bytes(uid),"little",False)
+                print("CARD ID: "+str(card))
+                return card
+                break
     
 
 # The pathfinder is basically a Breadth First Search algorithm.
@@ -355,6 +370,37 @@ def light_up_path(start_node, roll_number):
     for i in range(len(reachable_spaces)):
         Board_Spinner_pixels[reachable_spaces[i]] = (0, 5, 0)
     Board_Spinner_pixels.write()  # Update the NeoPixels
+
+# When this function is called, light up all the Yellow spaces.
+# Loop through the yellow_space list and light up that LED
+def light_up_yellow_spaces():
+    for yellow_space in yellow_space:
+        Board_Spinner_pixels[yellow_space] = (25, 25, 0)
+    Board_Spinner_pixels.write()
+
+# Same as light_up_yellow_spaces() but with the white spaces
+def light_up_white_spaces():
+    for white_space in white_space:
+        Board_Spinner_pixels[white_space] = (25, 25, 25)
+    Board_Spinner_pixels.write()
+
+def accusationSystem():
+    # TODO
+
+    # General structure of the accusation system
+
+    # Wait for RFID scan 1
+    # Wait for RFID scan 2
+    # Wait for RFID scan 3
+    # (make sure in general the the kinds of cards scanned are right, but it doesn't matter what order the cards are scanned in)
+    # Check result and compare it to the answer
+    # If correct
+        # Break from function, return player number
+    # If incorrect
+        # Remove player from the game
+        # Break from function, return 0
+
+    print("Accusation System functional called...")
         
 # When the device is turned on, test all of the LEDs on the board
 def StartupProcess():
@@ -415,25 +461,12 @@ def testFunction():
         
     #Test RFID Functionality    
     elif user_input == "4":
-        #print("Enter the option for RFID:")
-        #print("1: Read RFID")
-        #print("2: Write RFID (Currently not working)\n")
-        #user_input = input()
 
         print("RFID Reading...")
         
         #if user_input == "1":
         while True:
-            while True:
-                # Read RFID and print to console
-                RFIDreader.init()
-                (stat, tag_type) = RFIDreader.request(RFIDreader.REQIDL)
-                if stat == RFIDreader.OK:
-                    (stat, uid) = RFIDreader.SelectTagSN()
-                    if stat == RFIDreader.OK:
-                        card = int.from_bytes(bytes(uid),"little",False)
-                        print("CARD ID: "+str(card))
-                        break
+            card = readRFID()
                 
             if card == 17611714:
                 print("Test is Tag 1")
@@ -527,6 +560,23 @@ graph = {
     41: [33]
 }
 
+# Yellow spaces positions
+yellow_space = [0, 4, 23, 29, 32, 36]
+
+# White spaces positions
+white_space = [2, 17, 39]
+
+# Start spaces
+# A dictionary where the character and the position is linked together
+start_spaces = {
+    "Blue": 30,
+    "Purple": 5,
+    "Red": 1,
+    "Yellow": 12,
+    "Pink" : 40,
+    "Green" : 41
+}
+
 ########################################################################
 
 # Setup process
@@ -535,18 +585,23 @@ def GameSetup():
     
     # Create Player class for each player that joins the game
     Players = []  # To store players
-    max_players = 5  # Set maximum number of players
+    max_players = 4  # Set maximum number of players
 
     # A player joins the game by pressing the button for their panel. The button value is the player's panel
     while len(Players) < max_players:
         button_value = readButtons()  # Read button input
+        print(button_value)
         if button_value > 0:
             if all(player.pieceID != f"Panel{button_value}" for player in Players):
                 new_player = Player(f"Panel{button_value}")
+                print(new_player)
                 Players.append(new_player)
+                print(Players)
+                print(Player.panel)
                 print(f"Player {button_value} joined the game!")
             else:
                 print(f"Panel {button_value} is already taken.")
+                break
 
         
 
@@ -554,13 +609,63 @@ def GameSetup():
 
 def main():
     # Startup process
-    #StartupProcess()
+    StartupProcess()
     
     # Game setup
-    #GameSetup()
-    while True:
-        # Test function
-        testFunction()
+    GameSetup()
+
+    # Randomize pieces
+
+    #while True:
+    #    # Test function
+    #    testFunction()
+
+    # Structure of the general gameplay
+    # Start game loop
+
+    # Get player turn
+    # Wait for player to press spinner button
+    #if(is_spinner_button_pressed()):
+        # Get spinner value
+        #spinValue = playSpinnerSpinAndStop()
+            #If spinValue is "yellow"
+                #Light up all yellow spaces
+                #light_up_yellow_spaces()
+                # Wait for RFID scan
+                # Get RFID scan and output clue result
+                # Update player's panel
+                # If player presses accusation button, call accusation funciton
+                # Else move onto next turn
+            #If spinValue is "white"
+                # Light up all white spaces
+                #light_up_white_spaces()
+                # Wait for RFID scan
+                #readRFID()
+                    # Give an error message if wrong type scanned (scanned yellow instead of white)
+                #Update player's panel
+                # If player presses accusation button, call accusation funciton
+                # Else move onto next turn
+            #If spinValue is a number
+                # Get number from the spinner result
+                # Call lightuppath function passing it the spinner value
+                # If player lands on yellow
+                    # Wait for RFID
+                        # Make sure it's a yellow piece
+                    # Update player's panel
+                    # If player presses accusation button, call accusation funciton
+                    # Else move onto next turn
+                # If player lands on white
+                    # Wait for RFID
+                        # Make sure it's a white piece
+                    # Update player's panel
+                    # If player presses accusation button, call accusation funciton
+                    # Else move onto next turn
+                # Else, wait for accusation button or end turn button press
+                # If accusation button pressed
+                    # Call accusationSystem()
+                    # If accusationSystem returns anything other than a 0, break out of the loop
+
+
 
 main()
 
