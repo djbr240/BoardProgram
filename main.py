@@ -7,9 +7,14 @@ BoardLED_num_pixels = 42
 BoardLED_pin = Pin(28, Pin.OUT)
 Board_pixels = neopixel.NeoPixel(BoardLED_pin, BoardLED_num_pixels)
 
-# Panel LED config
+# Panel 1 LED config
 PanelLED_num_pixels = 26
-PanelLED_pin = Pin(26, Pin.OUT)
+PanelLED_pin = Pin(21, Pin.OUT)
+Panel_pixels = neopixel.NeoPixel(PanelLED_pin, PanelLED_num_pixels)
+
+# Panel 2 LED config
+PanelLED_num_pixels = 26
+PanelLED_pin = Pin(20, Pin.OUT)
 Panel_pixels = neopixel.NeoPixel(PanelLED_pin, PanelLED_num_pixels)
 
 # Spinner LED config

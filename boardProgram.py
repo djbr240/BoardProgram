@@ -186,36 +186,36 @@ furnitureRFID = {
 # The LED position for the clue panels
 cluePanelLED = {
     #characters
-    "Blue": 0,
-    "Purple": 0,
-    "Red": 0,
-    "Yellow": 0,
-    "Pink": 0,
-    "Green": 0,
+    "Yellow": 19,
+    "Red": 20,
+    "Green": 21,
+    "Blue": 22,
+    "Pink": 23,
+    "Purple": 24,
     
     #toys
-    "trex": 0,
-    "racecar": 0,
-    "teddybear": 0,
-    "mr_potatohead": 0,
-    "xylophone": 0,
-    "ball": 0,
+    "trex": 18,
+    "racecar": 17,
+    "teddybear": 16,
+    "mr_potatohead": 15,
+    "xylophone": 14,
+    "ball": 13,
     
     #furniture
-    "pooltable": 0,
-    "desk": 0,
-    "chair": 0,
-    "piano": 0,
-    "plant": 0,
-    "diningtable": 0,
+    "pooltable": 7,
+    "desk": 8,
+    "chair": 9,
+    "piano": 10,
+    "plant": 11,
+    "diningtable": 12,
     
     #time
-    "11": 0,
-    "12": 0,
-    "1": 0,
-    "2": 0,
-    "3": 0,
-    "4": 0,
+    "11": 6,
+    "12": 5,
+    "1": 4,
+    "2": 3,
+    "3": 2,
+    "4": 1,
     "5": 0
 }
 
