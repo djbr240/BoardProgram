@@ -201,10 +201,29 @@ def playSpinnerSpinAndStop():
 # This is the Player class, where all of the information for each player is created
 class Player:
     def __init__(self, pieceID, position=0, panel=None):
-        self.pieceID = pieceID        # A string to represent the piece ID
-        self.position = position      # An integer representing the player's position
-        self.cluesFound = []          # A list to store clues that the player has found
-        self.panel = panel            # A NeoPixel object representing the panel the player is on, or None if they are not on a panel yet
+        """
+        Initialize a player.
+        :param sensor_reader: A function reference for reading hall sensors.
+        """
+        self.position = None  # Tracks the player's current position on the board
+        self.clues_found = []  # List of clues collected by the player
+        self.piece = None  # The piece that the player is using
+        self.panel = None  # The LED panel assigned to the player
+        self.panel_leds_lit = []  # List of LEDs lit on the panel
+
+        
+    def assign_panel(self, panel):
+        """Assign a panel to the player."""
+        self.panel = panel
+        
+    def set_piece(self, piece):
+        """Set the player's piece after the first move."""
+        if self.piece is None:  # Piece can only be set once
+            self.piece = piece
+            
+    def collect_clue(self, clue):
+        """Add a clue to the player's collection."""
+        self.clues_found.append(clue)
 
     def add_clue(self, clue):
         """Add a clue (integer) to the player's list of cluesFound and update the panel."""
@@ -215,22 +234,35 @@ class Player:
         """Update the player's position."""
         self.position = new_position
         
-        def assign_panel(self, panel):
-            """Assign a panel to the player."""
-            self.panel = panel
+    def update_position(self, new_position=None):
+        """
+        Move the player to a new position and read hall sensors if applicable.
+        :param new_position: The new position to move to, optional if using sensor_reader.
+        """
+        if new_position is not None:
+            self.position = new_position
+        elif self.sensor_reader:
+            self.position = self.sensor_reader()
+        else:
+            print("Error: No new position provided and no sensor_reader set.")
+            
+    def get_position(self):
+        """Get the player's current position."""
+        return self.position
 
-    def update_panel(self):
-        """Update the panel LEDs to reflect the found clues."""
-        if self.panel:
-            # Clear all LEDs on the panel
-            self.panel.fill((0, 0, 0))
-            
-            # Light up LEDs corresponding to found clues
-            for clue in self.cluesFound:
-                if 0 <= clue < len(self.panel):
-                    self.panel[clue] = (0, 255, 0)  # Green for found clues
-            
-            self.panel.write()
+
+    def update_panel(self, led_index):
+        """Add an LED to the player's panel and update the panel."""
+        if led_index not in self.leds_lit:
+            self.panel_leds_lit.append(led_index)
+            if self.panel:
+                self.panel.set_led(led_index, "red")
+            else:
+                print("No panel assigned to this player.")
+    
+    def display_panel_status(self):
+        """Display the status of the player's panel."""
+        print(f"Player's panel LEDs: {self.leds_lit}")
 
     def __str__(self):
         return f"Player {self.pieceID} is at position {self.position} with clues {self.cluesFound}"
@@ -588,7 +620,7 @@ def GameSetup():
     max_players = 4  # Set maximum number of players
 
     # A player joins the game by pressing the button for their panel. The button value is the player's panel
-    while len(Players) < max_players:
+    while len(Players) < max_players or is_spinner_button_pressed == True:
         button_value = readButtons()  # Read button input
         print(button_value)
         if button_value > 0:
@@ -665,12 +697,4 @@ def main():
                     # Call accusationSystem()
                     # If accusationSystem returns anything other than a 0, break out of the loop
 
-
-
 main()
-
-# Example usage:
-#player1 = Player("A1")
-#player1.add_clue(5)
-#player1.move(10)
-#print(player1)
