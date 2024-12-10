@@ -664,6 +664,21 @@ def testFunction():
                 while True:
                     # Fetch the corresponding position from the dictionary
                     if user_input in cluePanelLED:
+                        Panel1_pixels[cluePanelLED[user_input]]
+                        Panel1_pixels.write()
+                        print(f"The {user_input} piece is at position {cluePanelLED[user_input]}")
+                    else:
+                        print("Invalid input. Please enter a valid name from the dictionary.")
+
+            if user_input == "2":
+                user_input = input("Input which clue: ")
+                print(f"Enabling led for clue: {user_input}")
+                # Determine clue from dictionary
+                while True:
+                    # Fetch the corresponding position from the dictionary
+                    if user_input in cluePanelLED:
+                        Panel2_pixels[cluePanelLED[user_input]]
+                        Panel2_pixels.write()
                         print(f"The {user_input} piece is at position {cluePanelLED[user_input]}")
                     else:
                         print("Invalid input. Please enter a valid name from the dictionary.")
