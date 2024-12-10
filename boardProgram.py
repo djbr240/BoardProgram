@@ -92,6 +92,120 @@ MUX3_select_pins = [
 RFIDreader = MFRC522(spi_id=0,sck=2,miso=0,mosi=3,cs=1,rst=16)
 
 ################################################################
+# Piece identification, graph, and LED locations on the board and panels
+
+# Graph represented as an adjacency list
+# Left side is the source, in [] is the source's neighbors
+graph = {
+    0: [10],
+    1: [9],
+    2: [3, 8],
+    3: [2, 8],
+    4: [7],
+    5: [6],
+    6: [7],
+    7: [4, 6, 8, 15],
+    8: [2, 3, 7, 14],
+    9: [14],
+    10: [0, 11],
+    11: [10, 13],
+    12: [13],
+    13: [11, 14, 20],
+    14: [8, 9, 13, 15, 21],
+    15: [7, 14, 16, 19],
+    16: [15, 17],
+    17: [16],
+    18: [19, 28, 29],
+    19: [15, 18, 27],
+    20: [13, 21, 22, 23],
+    21: [14, 20, 22, 25],
+    22: [20, 21, 23],
+    23: [20, 22],
+    24: [25, 38],
+    25: [21, 24, 26, 37],
+    26: [25, 27],
+    27: [19, 26, 28, 31, 33],
+    28: [18, 27, 29],
+    29: [18, 28],
+    30: [31],
+    31: [27, 33],
+    32: [33],
+    33: [27, 31, 32, 35],
+    34: [35, 37],
+    35: [33, 34, 36],
+    36: [35, 37],
+    37: [25, 34, 36],
+    38: [24, 39],
+    39: [38],
+    40: [37],
+    41: [33]
+}
+
+# Yellow spaces positions
+yellow_space = [0, 4, 23, 29, 32, 36]
+
+# White spaces positions
+white_space = [2, 17, 39]
+
+# Start spaces
+# A dictionary where the character and the position is linked together
+start_spaces = {
+    "Blue": 30,
+    "Purple": 5,
+    "Red": 1,
+    "Yellow": 12,
+    "Pink" : 40,
+    "Green" : 41
+}
+
+# Dictionary for the character pieces and the RFID links
+# All zeros as a placeholder for now
+pieceRFID = {
+    "Blue": 0,
+    "Purple": 0,
+    "Red": 0,
+    "Yellow": 0,
+    "Pink": 0,
+    "Green": 0,
+}
+
+# The LED position for the clue panels
+cluePanelLED = {
+    #characters
+    "Blue": 0,
+    "Purple": 0,
+    "Red": 0,
+    "Yellow": 0,
+    "Pink": 0,
+    "Green": 0,
+    
+    #toys
+    "trex": 0,
+    "racecar": 0,
+    "teddybear": 0,
+    "mr_potatohead": 0,
+    "xylophone": 0,
+    "ball": 0,
+    
+    #locations
+    "pooltable": 0,
+    "desk": 0,
+    "chair": 0,
+    "piano": 0,
+    "plant": 0,
+    "diningtable": 0,
+    
+    #time
+    "11": 0,
+    "12": 0,
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0
+}
+
+################################################################
 # The following functions are LED animations
 
 # Define LED colors for the sequence
@@ -545,116 +659,7 @@ def testFunction():
     else:
         print("Invalid choice. Please try again.")
 
-# Graph represented as an adjacency list
-# Left side is the source, in [] is the source's neighbors
-graph = {
-    0: [10],
-    1: [9],
-    2: [3, 8],
-    3: [2, 8],
-    4: [7],
-    5: [6],
-    6: [7],
-    7: [4, 6, 8, 15],
-    8: [2, 3, 7, 14],
-    9: [14],
-    10: [0, 11],
-    11: [10, 13],
-    12: [13],
-    13: [11, 14, 20],
-    14: [8, 9, 13, 15, 21],
-    15: [7, 14, 16, 19],
-    16: [15, 17],
-    17: [16],
-    18: [19, 28, 29],
-    19: [15, 18, 27],
-    20: [13, 21, 22, 23],
-    21: [14, 20, 22, 25],
-    22: [20, 21, 23],
-    23: [20, 22],
-    24: [25, 38],
-    25: [21, 24, 26, 37],
-    26: [25, 27],
-    27: [19, 26, 28, 31, 33],
-    28: [18, 27, 29],
-    29: [18, 28],
-    30: [31],
-    31: [27, 33],
-    32: [33],
-    33: [27, 31, 32, 35],
-    34: [35, 37],
-    35: [33, 34, 36],
-    36: [35, 37],
-    37: [25, 34, 36],
-    38: [24, 39],
-    39: [38],
-    40: [37],
-    41: [33]
-}
 
-# Yellow spaces positions
-yellow_space = [0, 4, 23, 29, 32, 36]
-
-# White spaces positions
-white_space = [2, 17, 39]
-
-# Start spaces
-# A dictionary where the character and the position is linked together
-start_spaces = {
-    "Blue": 30,
-    "Purple": 5,
-    "Red": 1,
-    "Yellow": 12,
-    "Pink" : 40,
-    "Green" : 41
-}
-
-# Dictionary for the character pieces and the RFID links
-# All zeros as a placeholder for now
-pieceRFID = {
-    "Blue": 0,
-    "Purple": 0,
-    "Red": 0,
-    "Yellow": 0,
-    "Pink": 0,
-    "Green": 0,
-}
-
-# The LED position for the clue panels
-cluePanelLED = {
-    #characters
-    "Blue": 0,
-    "Purple": 0,
-    "Red": 0,
-    "Yellow": 0,
-    "Pink": 0,
-    "Green": 0,
-    
-    #toys
-    "trex": 0,
-    "racecar": 0,
-    "teddybear": 0,
-    "mr_potatohead": 0,
-    "xylophone": 0,
-    "ball": 0,
-    
-    #locations
-    "pooltable": 0,
-    "desk": 0,
-    "chair": 0,
-    "piano": 0,
-    "plant": 0,
-    "diningtable": 0,
-    
-    #time
-    "11": 0,
-    "12": 0,
-    "1": 0,
-    "2": 0,
-    "3": 0,
-    "4": 0,
-    "5": 0
-}
 
 ########################################################################
 
