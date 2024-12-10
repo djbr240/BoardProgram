@@ -19,7 +19,7 @@ import random
 # This is the only place where Pins, number of LEDs, threshold values, etc are defined.
 
 # Board LED config
-Board_Spinner_LED_num_pixels = 48 # 42 Board LEDs and 6 Spinner LEDs = 48
+Board_Spinner_LED_num_pixels = 25 # 42 Board LEDs and 6 Spinner LEDs = 48
 Board_Spinner_LED_pin = Pin(22, Pin.OUT)
 Board_Spinner_pixels = neopixel.NeoPixel(Board_Spinner_LED_pin, Board_Spinner_LED_num_pixels)
 
@@ -53,7 +53,7 @@ Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 
 # Mux configuration
 
-hall_sensor_threshold = 500
+hall_sensor_threshold = 1000
 button_threshold = 500
 
 # Initialize ADC for MUX SIG output
@@ -649,7 +649,7 @@ def testFunction():
             Panel2_pixels.fill((25, 25, 25))
             Panel1_pixels.write()
             Panel2_pixels.write()
-            sleep(1)
+            sleep(5)
             Panel1_pixels.fill((0, 0, 0))
             Panel2_pixels.fill((0, 0, 0))
             Panel1_pixels.write()
