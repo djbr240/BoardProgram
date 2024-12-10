@@ -50,11 +50,6 @@ Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 #PanelLED6_pin = Pin(26, Pin.OUT)
 #Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
-# Spinner LED config (This is part of board leds)
-#SpinnerLED_num_pixels = 6
-#SpinnerLED_pin = Pin(17, Pin.OUT)
-#Spinner_pixels = neopixel.NeoPixel(SpinnerLED_pin, SpinnerLED_num_pixels)
-
 
 # Mux configuration
 
@@ -149,13 +144,23 @@ white_space = [2, 17, 39]
 
 # Start spaces
 # A dictionary where the character and the position is linked together
-start_spaces = {
+character_start_spaces = {
     "Blue": 30,
     "Purple": 5,
     "Red": 1,
     "Yellow": 12,
     "Pink" : 40,
     "Green" : 41
+}
+
+# Furniture spaces
+furniture_start_spaces = {
+    "pooltable": 29,
+    "desk": 4,
+    "chair": 0,
+    "piano": 36,
+    "plant": 32,
+    "diningtable": 23
 }
 
 # Dictionary for the character pieces and the RFID links
@@ -167,6 +172,15 @@ pieceRFID = {
     "Yellow": 0,
     "Pink": 0,
     "Green": 0,
+}
+
+furnitureRFID = {
+    "pooltable": 0,
+    "desk": 0,
+    "chair": 0,
+    "piano": 0,
+    "plant": 0,
+    "diningtable": 0
 }
 
 # The LED position for the clue panels
@@ -187,7 +201,7 @@ cluePanelLED = {
     "xylophone": 0,
     "ball": 0,
     
-    #locations
+    #furniture
     "pooltable": 0,
     "desk": 0,
     "chair": 0,
@@ -206,9 +220,83 @@ cluePanelLED = {
 }
 
 ################################################################
+
+# This is the Player class, where all of the information for each player is created
+class Player:
+    def __init__(self, pieceID, position=0, panel=None):
+        """
+        Initialize a player.
+        :param sensor_reader: A function reference for reading hall sensors.
+        """
+        self.position = None  # Tracks the player's current position on the board
+        self.clues_found = []  # List of clues collected by the player
+        self.piece = None  # The piece that the player is using
+        self.panel = None  # The LED panel assigned to the player
+        self.panel_leds_lit = []  # List of LEDs lit on the panel
+
+        
+    def assign_panel(self, panel):
+        """Assign a panel to the player."""
+        self.panel = panel
+        
+    def set_piece(self, piece):
+        """Set the player's piece after the first move."""
+        if self.piece is None:  # Piece can only be set once
+            self.piece = piece
+            
+    def collect_clue(self, clue):
+        """Add a clue to the player's collection."""
+        self.clues_found.append(clue)
+
+    def add_clue(self, clue):
+        """Add a clue (integer) to the player's list of cluesFound and update the panel."""
+        self.cluesFound.append(clue)
+        self.update_panel()
+
+    def move(self, new_position):
+        """Update the player's position."""
+        self.position = new_position
+        
+    def update_position(self, new_position=None):
+        """
+        Move the player to a new position and read hall sensors if applicable.
+        :param new_position: The new position to move to, optional if using sensor_reader.
+        """
+        if new_position is not None:
+            self.position = new_position
+        elif self.sensor_reader:
+            self.position = self.sensor_reader()
+        else:
+            print("Error: No new position provided and no sensor_reader set.")
+            
+    def get_position(self):
+        """Get the player's current position."""
+        return self.position
+
+
+    def update_panel(self, led_index):
+        """Add an LED to the player's panel and update the panel."""
+        if led_index not in self.leds_lit:
+            self.panel_leds_lit.append(led_index)
+            if self.panel:
+                self.panel.set_led(led_index, "red")
+            else:
+                print("No panel assigned to this player.")
+    
+    def display_panel_status(self):
+        """Display the status of the player's panel."""
+        print(f"Player's panel LEDs: {self.leds_lit}")
+
+    def __str__(self):
+        return f"Player {self.pieceID} is at position {self.position} with clues {self.cluesFound}"
+    
+    # End player class
+################################################################
+
+################################################################
 # The following functions are LED animations
 
-# Define LED colors for the sequence
+# Define LED colors for the sequence on the spinner
 LED_COLORS = {
     0: (255, 255, 255),  # White
     1: (0, 0, 255),      # Blue
@@ -312,78 +400,6 @@ def playSpinnerSpinAndStop():
 
 ################################################################
 
-# This is the Player class, where all of the information for each player is created
-class Player:
-    def __init__(self, pieceID, position=0, panel=None):
-        """
-        Initialize a player.
-        :param sensor_reader: A function reference for reading hall sensors.
-        """
-        self.position = None  # Tracks the player's current position on the board
-        self.clues_found = []  # List of clues collected by the player
-        self.piece = None  # The piece that the player is using
-        self.panel = None  # The LED panel assigned to the player
-        self.panel_leds_lit = []  # List of LEDs lit on the panel
-
-        
-    def assign_panel(self, panel):
-        """Assign a panel to the player."""
-        self.panel = panel
-        
-    def set_piece(self, piece):
-        """Set the player's piece after the first move."""
-        if self.piece is None:  # Piece can only be set once
-            self.piece = piece
-            
-    def collect_clue(self, clue):
-        """Add a clue to the player's collection."""
-        self.clues_found.append(clue)
-
-    def add_clue(self, clue):
-        """Add a clue (integer) to the player's list of cluesFound and update the panel."""
-        self.cluesFound.append(clue)
-        self.update_panel()
-
-    def move(self, new_position):
-        """Update the player's position."""
-        self.position = new_position
-        
-    def update_position(self, new_position=None):
-        """
-        Move the player to a new position and read hall sensors if applicable.
-        :param new_position: The new position to move to, optional if using sensor_reader.
-        """
-        if new_position is not None:
-            self.position = new_position
-        elif self.sensor_reader:
-            self.position = self.sensor_reader()
-        else:
-            print("Error: No new position provided and no sensor_reader set.")
-            
-    def get_position(self):
-        """Get the player's current position."""
-        return self.position
-
-
-    def update_panel(self, led_index):
-        """Add an LED to the player's panel and update the panel."""
-        if led_index not in self.leds_lit:
-            self.panel_leds_lit.append(led_index)
-            if self.panel:
-                self.panel.set_led(led_index, "red")
-            else:
-                print("No panel assigned to this player.")
-    
-    def display_panel_status(self):
-        """Display the status of the player's panel."""
-        print(f"Player's panel LEDs: {self.leds_lit}")
-
-    def __str__(self):
-        return f"Player {self.pieceID} is at position {self.position} with clues {self.cluesFound}"
-    
-    # End player class
-################################################################
-
 # This function goes through every channel in the MUXs and checks all readings from the Hall Sensors
 # It then returns a list of all the Hall Sensors that detected a magnetic presence
 # This function will need to be called every time the position needs to be updated
@@ -433,10 +449,10 @@ def read_hall_sensors():
 # We want to have Potentiometer and Buttons separated since they're doing significantly different functions
 # This is a map of those assignments:
 # MUX3 Channel 10 = Potentiometer
-# MUX3 Channel 11 = Button2
-# MUX3 Channel 12 = Button3
-# MUX3 Channel 13 = Button4
-# MUX3 Channel 14 = Button5
+# MUX3 Channel 11 = Button1
+# MUX3 Channel 12 = Button2
+# MUX3 Channel 13 = Button3
+# MUX3 Channel 14 = Button4
 # MUX3 Channel 15 = Spinner Button
 def readPotentiometer():
     # Read MUX3 Channel 15
@@ -664,30 +680,69 @@ def testFunction():
 ########################################################################
 
 # Setup process
-
 def GameSetup():
+    """
+    Sets up the game by assigning players to their panels and initializing their positions 
+    based on RFID scans. Players and furniture pieces are linked to their respective start locations.
+    """
+    players = []  # List to store player objects
+
+    print("Waiting for players to press their 'end turn' buttons to assign panels...")
+
+    # Map button presses to panel assignments
+    panel_assignments = {
+        "Button1": Panel1_pixels,
+        "Button2": Panel2_pixels,
+        "Button3": Panel3_pixels,
+        "Button4": Panel4_pixels,
+    }
     
-    # Create Player class for each player that joins the game
-    Players = []  # To store players
-    max_players = 4  # Set maximum number of players
+    # Wait for players to press their "end turn" buttons and assign panels
+    assigned_buttons = set()
+    while len(assigned_buttons) < len(panel_assignments):
+        button_pressed = readButtons()  # Replace with your implementation of readButtons
+        if button_pressed in panel_assignments and button_pressed not in assigned_buttons:
+            print(f"{button_pressed} pressed! Assigning panel...")
+            panel_pixels = panel_assignments[button_pressed]
+            new_player = Player(position=0, cluesFound=[], pieceID="")
+            new_player.panel = panel_pixels
+            players.append(new_player)
+            assigned_buttons.add(button_pressed)
+            print(f"Player assigned to {button_pressed}.")
+        elif button_pressed:
+            print(f"{button_pressed} already assigned. Waiting for other players...")
 
-    # A player joins the game by pressing the button for their panel. The button value is the player's panel
-    while len(Players) < max_players or is_spinner_button_pressed == True:
-        button_value = readButtons()  # Read button input
-        print(button_value)
-        if button_value > 0:
-            if all(player.pieceID != f"Panel{button_value}" for player in Players):
-                new_player = Player(f"Panel{button_value}")
-                print(new_player)
-                Players.append(new_player)
-                print(Players)
-                print(Player.panel)
-                print(f"Player {button_value} joined the game!")
-            else:
-                print(f"Panel {button_value} is already taken.")
-                break
-
+    # Setup players on board based on RFID scans
+    print("Waiting for RFID scans to assign character pieces to players...")
+    for player in players:
+        print(f"Waiting for RFID scan for player using {player.panel}...")
+        scanned_rfid = None
+        while not scanned_rfid:  # Replace with actual RFID reading function
+            scanned_rfid = read_rfid()  # Replace with actual function to read RFID
         
+        # Assign pieceID to the player based on RFID scan
+        if scanned_rfid in pieceRFID:
+            player.pieceID = pieceRFID[scanned_rfid]
+            player.position = character_start_spaces[player.pieceID]
+            light_up_position(Board_Spinner_pixels, player.position)  # Light up initial position
+            print(f"Player piece {player.pieceID} assigned to start position {player.position}.")
+        else:
+            print("Invalid RFID scan. Please try again.")
+            continue  # Retry the RFID scan
+
+    # Setup furniture on board
+    print("Setting up furniture pieces on board...")
+    for rfid, piece_name in furnitureRFID.items():
+        if piece_name in furniture_start_spaces:
+            position = furniture_start_spaces[piece_name]
+            light_up_position(Board_Spinner_pixels, position)  # Light up furniture position
+            print(f"Furniture piece {piece_name} placed at position {position}.")
+        else:
+            print(f"Error: Start position for {piece_name} not found.")
+
+    print("Game setup complete. Players are ready to start!")
+    return players
+
 
 # Begin main function
 
