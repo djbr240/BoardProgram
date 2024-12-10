@@ -166,21 +166,21 @@ furniture_start_spaces = {
 # Dictionary for the character pieces and the RFID links
 # All zeros as a placeholder for now
 pieceRFID = {
-    "Blue": 0,
-    "Purple": 0,
-    "Red": 0,
-    "Yellow": 0,
-    "Pink": 0,
-    "Green": 0,
+    "Blue": 40551758664916996,
+    "Purple": 40551758664917252,
+    "Red": 40551758664917508,
+    "Yellow": 40551758664917764,
+    "Pink": 40551758664918020,
+    "Green": 40551758664847108,
 }
 
 furnitureRFID = {
-    "pooltable": 0,
-    "desk": 0,
-    "chair": 0,
-    "piano": 0,
-    "plant": 0,
-    "diningtable": 0
+    "pooltable": 40551758664847364,
+    "desk": 40551758664847620,
+    "chair":40551758664847876,
+    "piano": 40551758664848132,
+    "plant": 40551758664856068,
+    "diningtable": 40551758664856324
 }
 
 # The LED position for the clue panels
@@ -479,15 +479,17 @@ def readButtons():
     select_mux_channel(MUX3_select_pins, 14)
     button4_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
-    select_mux_channel(MUX3_select_pins, 15)
-    button5_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
+
+    # This is for the spinner button
+    #select_mux_channel(MUX3_select_pins, 15)
+    #button5_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
     buttonPressed = 0
     if button1_pressed: buttonPressed = 1
     if button2_pressed: buttonPressed = 2
     if button3_pressed: buttonPressed = 3
     if button4_pressed: buttonPressed = 4
-    if button5_pressed: buttonPressed = 5
+    #if button5_pressed: buttonPressed = 5
     
     
     return buttonPressed
@@ -504,6 +506,20 @@ def readRFID():
                 print("CARD ID: "+str(card))
                 return card
                 break
+
+def identify_rfid(card, pieceRFID, furnitureRFID):
+    # Check character pieces
+    for name, rfid_value in pieceRFID.items():
+        if card == rfid_value:
+            return name
+
+    # Check furniture pieces
+    for name, rfid_value in furnitureRFID.items():
+        if card == rfid_value:
+            return name
+
+    # If not found in either dictionary
+    return None
     
 
 # The pathfinder is basically a Breadth First Search algorithm.
@@ -607,6 +623,7 @@ def testFunction():
     print("4: RFID options")
     print("5: Hall Sensor test")
     print("6: Test spinner")
+    print("7: Button test")
     
     # Get user input
     user_input = input("Enter your choice: ")
@@ -623,8 +640,34 @@ def testFunction():
         print("Test complete")
         
     elif user_input == "2":
-        print("Testing panel LEDs...")
-        # Light up all panel LEDs
+        user_input = input("Enter what part of the panels you want to test: \n1. Flash all leds on \n2. Light up clue")
+
+        if user_input == "1":
+            print("Testing panel LEDs...")
+            # Light up all panel LEDs
+            Panel1_pixels.fill((25, 25, 25))
+            Panel2_pixels.fill((25, 25, 25))
+            Panel1_pixels.write()
+            Panel2_pixels.write()
+            sleep(1)
+            Panel1_pixels.fill((0, 0, 0))
+            Panel2_pixels.fill((0, 0, 0))
+            Panel1_pixels.write()
+            Panel2_pixels.write()
+
+        if user_input == "2":
+            print("Which panel?")
+            if user_input == "1":
+                user_input = input("Input which clue: ")
+                print(f"Enabling led for clue: {user_input}")
+                # Determine clue from dictionary
+                while True:
+                    # Fetch the corresponding position from the dictionary
+                    if user_input in cluePanelLED:
+                        print(f"The {user_input} piece is at position {cluePanelLED[user_input]}")
+                    else:
+                        print("Invalid input. Please enter a valid name from the dictionary.")
+                
         
     elif user_input == "3":
         print("Enter the space number: ")
@@ -648,8 +691,14 @@ def testFunction():
         #if user_input == "1":
         while True:
             card = readRFID()
+
+            item_name = identify_rfid(card, pieceRFID, furnitureRFID)
+
+            if item_name:
+                print(f"Identified {item_name}!")
+            
                 
-            if card == 17611714:
+            elif card == 17611714:
                 print("Test is Tag 1")
             elif card == 17450884:
                 print("Test is Tag 2")
@@ -690,6 +739,24 @@ def testFunction():
                 result = playSpinnerSpinAndStop()
                 print(f"Spinner result: {result}")
                 sleep(0.5)  # Debounce delay to avoid multiple spins
+
+    elif user_input == "7":
+        print("Waiting for button press to light up position...")
+        
+        previous_btn_state = None  # To track the previous state of the button
+
+        while True:
+            btnInput = readButtons()
+
+            # Check for a transition from "not pressed" (None or 0) to "pressed" (non-zero value)
+            if btnInput and btnInput != previous_btn_state:
+                print(f"Button pressed: {btnInput}")
+            
+            # Update the previous button state
+            previous_btn_state = btnInput
+
+
+                    
             
     else:
         print("Invalid choice. Please try again.")
@@ -705,6 +772,11 @@ def GameSetup():
     based on RFID scans. Players and furniture pieces are linked to their respective start locations.
     """
     players = []  # List to store player objects
+    assigned_rfids = set() # To track processed rfids
+
+    # Invert dictionaries for easier RFID lookup
+    rfid_to_piece = {v: k for k, v in pieceRFID.items()}
+    rfid_to_furniture = {v: k for k, v in furnitureRFID.items()}
 
     print("Waiting for players to press their 'end turn' buttons to assign panels...")
 
@@ -715,49 +787,61 @@ def GameSetup():
         "Button3": Panel3_pixels,
         "Button4": Panel4_pixels,
     }
+
+    # Test code if we don't have buttons
+    # Just pretend that we did get a button press
+    button_pressed = "Button1"
+    panel_pixels = panel_assignments[button_pressed]
+    new_player = Player(position=0, pieceID="")
+    new_player.panel = panel_pixels
+    players.append(new_player)
+    print(f"Player assigned to {button_pressed}.")
     
     # Wait for players to press their "end turn" buttons and assign panels
-    assigned_buttons = set()
-    while len(assigned_buttons) < len(panel_assignments):
-        button_pressed = readButtons()  # Replace with your implementation of readButtons
-        if button_pressed in panel_assignments and button_pressed not in assigned_buttons:
-            print(f"{button_pressed} pressed! Assigning panel...")
-            panel_pixels = panel_assignments[button_pressed]
-            new_player = Player(position=0, cluesFound=[], pieceID="")
-            new_player.panel = panel_pixels
-            players.append(new_player)
-            assigned_buttons.add(button_pressed)
-            print(f"Player assigned to {button_pressed}.")
-        elif button_pressed:
-            print(f"{button_pressed} already assigned. Waiting for other players...")
+    #assigned_buttons = set()
+    #while len(assigned_buttons) < len(panel_assignments):
+    #    button_pressed = readButtons()  # Replace with your implementation of readButtons
+    #    if button_pressed in panel_assignments and button_pressed not in assigned_buttons:
+    #        print(f"{button_pressed} pressed! Assigning panel...")
+    #        panel_pixels = panel_assignments[button_pressed]
+    #        new_player = Player(position=0, cluesFound=[], pieceID="")
+    #        new_player.panel = panel_pixels
+    #        players.append(new_player)
+    #        assigned_buttons.add(button_pressed)
+    #        print(f"Player assigned to {button_pressed}.")
+    #    elif button_pressed:
+    #        print(f"{button_pressed} already assigned. Waiting for other players...")
 
-    # Setup players on board based on RFID scans
+
+    # Assign character pieces based on RFID scans
     print("Waiting for RFID scans to assign character pieces to players...")
-    for player in players:
-        print(f"Waiting for RFID scan for player using {player.panel}...")
-        scanned_rfid = None
-        while not scanned_rfid:  # Replace with actual RFID reading function
-            scanned_rfid = readRFID()  # Replace with actual function to read RFID
-        
-        # Assign pieceID to the player based on RFID scan
-        if scanned_rfid in pieceRFID:
-            player.pieceID = pieceRFID[scanned_rfid]
-            player.position = character_start_spaces[player.pieceID]
-            light_up_position(player.position)  # Light up initial position
-            print(f"Player piece {player.pieceID} assigned to start position {player.position}.")
-        else:
-            print("Invalid RFID scan. Please try again.")
-            continue  # Retry the RFID scan
+    while len(players) < len(panel_assignments):  # Adjust loop to allow 2–4 players
+        scanned_rfid = readRFID()  # Replace with actual RFID reading function
+        if scanned_rfid and scanned_rfid not in assigned_rfids:
+            if scanned_rfid in rfid_to_piece:
+                piece_name = rfid_to_piece[scanned_rfid]
+                player = Player(pieceID=piece_name, position=character_start_spaces[piece_name])
+                player.panel = panel_assignments[f"Button{len(players) + 1}"]  # Assign next available panel
+                light_up_position(player.position)  # Light up initial position
+                players.append(player)
+                assigned_rfids.add(scanned_rfid)
+                print(f"Player piece {piece_name} assigned to start position {player.position}.")
+            else:
+                print("Invalid RFID scan. Please try again.")
 
     # Setup furniture on board
     print("Setting up furniture pieces on board...")
-    for rfid, piece_name in furnitureRFID.items():
-        if piece_name in furniture_start_spaces:
-            position = furniture_start_spaces[piece_name]
-            light_up_position(position)  # Light up furniture position
-            print(f"Furniture piece {piece_name} placed at position {position}.")
+    for rfid, piece_name in rfid_to_furniture.items():
+        if rfid not in assigned_rfids:
+            if piece_name in furniture_start_spaces:
+                position = furniture_start_spaces[piece_name]
+                light_up_position(position)  # Light up furniture position
+                assigned_rfids.add(rfid)
+                print(f"Furniture piece {piece_name} placed at position {position}.")
+            else:
+                print(f"Error: Start position for {piece_name} not found.")
         else:
-            print(f"Error: Start position for {piece_name} not found.")
+            print(f"Furniture piece {piece_name} already placed.")
 
     print("Game setup complete. Players are ready to start!")
     return players
@@ -767,16 +851,16 @@ def GameSetup():
 
 def main():
     # Startup process
-    StartupProcess()
+    #StartupProcess()
     
     # Game setup
-    GameSetup()
+    #GameSetup()
 
     # Randomize pieces
 
-    #while True:
-    #    # Test function
-    #    testFunction()
+    while True:
+        # Test function
+        testFunction()
 
     # Structure of the general gameplay
     # Start game loop
