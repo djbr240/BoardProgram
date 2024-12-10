@@ -226,69 +226,73 @@ class Player:
     def __init__(self, pieceID, position=0, panel=None):
         """
         Initialize a player.
-        :param sensor_reader: A function reference for reading hall sensors.
+        :param pieceID: The identifier for the player's piece.
+        :param position: The starting position of the player on the board.
+        :param panel: The LED panel assigned to the player.
         """
-        self.position = None  # Tracks the player's current position on the board
+        self.pieceID = pieceID  # The piece the player is using
+        self.position = position  # Tracks the player's current position on the board
         self.clues_found = []  # List of clues collected by the player
-        self.piece = None  # The piece that the player is using
-        self.panel = None  # The LED panel assigned to the player
+        self.panel = panel  # The LED panel assigned to the player
         self.panel_leds_lit = []  # List of LEDs lit on the panel
 
-        
     def assign_panel(self, panel):
         """Assign a panel to the player."""
         self.panel = panel
-        
+
     def set_piece(self, piece):
         """Set the player's piece after the first move."""
-        if self.piece is None:  # Piece can only be set once
-            self.piece = piece
-            
+        if self.pieceID is None:  # Piece can only be set once
+            self.pieceID = piece
+
     def collect_clue(self, clue):
         """Add a clue to the player's collection."""
         self.clues_found.append(clue)
 
     def add_clue(self, clue):
         """Add a clue (integer) to the player's list of cluesFound and update the panel."""
-        self.cluesFound.append(clue)
+        self.clues_found.append(clue)
         self.update_panel()
 
     def move(self, new_position):
         """Update the player's position."""
         self.position = new_position
-        
+        self.update_panel()  # Light up the new position on the panel
+
     def update_position(self, new_position=None):
         """
-        Move the player to a new position and read hall sensors if applicable.
+        Move the player to a new position and update the panel.
         :param new_position: The new position to move to, optional if using sensor_reader.
         """
         if new_position is not None:
             self.position = new_position
-        elif self.sensor_reader:
-            self.position = self.sensor_reader()
         else:
-            print("Error: No new position provided and no sensor_reader set.")
-            
+            print("Error: No new position provided.")
+        
+        self.update_panel()  # Update the LED panel after moving
+
     def get_position(self):
         """Get the player's current position."""
         return self.position
 
+    def update_panel(self):
+        """Update the player's panel by lighting up the player's current position."""
+        if self.panel is not None:
+            # Ensure we only light up the player's position on the panel
+            if self.position not in self.panel_leds_lit:
+                self.panel_leds_lit.append(self.position)
+                # Light up the position on the panel
+                light_up_position(self.position)  # Use your existing function to light up the position
+        else:
+            print("No panel assigned to this player.")
 
-    def update_panel(self, led_index):
-        """Add an LED to the player's panel and update the panel."""
-        if led_index not in self.leds_lit:
-            self.panel_leds_lit.append(led_index)
-            if self.panel:
-                self.panel.set_led(led_index, "red")
-            else:
-                print("No panel assigned to this player.")
-    
     def display_panel_status(self):
         """Display the status of the player's panel."""
-        print(f"Player's panel LEDs: {self.leds_lit}")
+        print(f"Player {self.pieceID}'s panel LEDs: {self.panel_leds_lit}")
 
     def __str__(self):
-        return f"Player {self.pieceID} is at position {self.position} with clues {self.cluesFound}"
+        return f"Player {self.pieceID} is at position {self.position} with clues {self.clues_found}"
+
     
     # End player class
 ################################################################
@@ -545,6 +549,21 @@ def light_up_white_spaces():
     for white_space in white_space:
         Board_Spinner_pixels[white_space] = (25, 25, 25)
     Board_Spinner_pixels.write()
+    
+# For the setup process, this function lights up one of the LED positions
+def light_up_position(position):
+    if 0 <= position < len(Board_Spinner_pixels):
+        # Turn off all LEDs first
+        for i in range(len(Board_Spinner_pixels)):
+            Board_Spinner_pixels[i] = (0, 0, 0)  # RGB values for "off"
+
+        # Light up the specified position
+        Board_Spinner_pixels[position] = (255, 255, 255)  # RGB values for "white" or a bright color
+        Board_Spinner_pixels.write()  # Function to send data to the LED strip
+        print(f"Position {position} lit up.")
+    else:
+        print(f"Error: Position {position} is out of range.")
+
 
 def accusationSystem():
     # TODO
@@ -718,13 +737,13 @@ def GameSetup():
         print(f"Waiting for RFID scan for player using {player.panel}...")
         scanned_rfid = None
         while not scanned_rfid:  # Replace with actual RFID reading function
-            scanned_rfid = read_rfid()  # Replace with actual function to read RFID
+            scanned_rfid = readRFID()  # Replace with actual function to read RFID
         
         # Assign pieceID to the player based on RFID scan
         if scanned_rfid in pieceRFID:
             player.pieceID = pieceRFID[scanned_rfid]
             player.position = character_start_spaces[player.pieceID]
-            light_up_position(Board_Spinner_pixels, player.position)  # Light up initial position
+            light_up_position(player.position)  # Light up initial position
             print(f"Player piece {player.pieceID} assigned to start position {player.position}.")
         else:
             print("Invalid RFID scan. Please try again.")
@@ -735,7 +754,7 @@ def GameSetup():
     for rfid, piece_name in furnitureRFID.items():
         if piece_name in furniture_start_spaces:
             position = furniture_start_spaces[piece_name]
-            light_up_position(Board_Spinner_pixels, position)  # Light up furniture position
+            light_up_position(position)  # Light up furniture position
             print(f"Furniture piece {piece_name} placed at position {position}.")
         else:
             print(f"Error: Start position for {piece_name} not found.")

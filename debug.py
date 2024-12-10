@@ -1,12 +1,12 @@
 # The LED position for the clue panels
 cluePanelLED = {
     #characters
-    "Blue": 0,
-    "Purple": 0,
-    "Red": 0,
-    "Yellow": 0,
-    "Pink": 0,
-    "Green": 0,
+    "Blue": 1,
+    "Purple": 2,
+    "Red": 3,
+    "Yellow": 4,
+    "Pink": 5,
+    "Green": 6,
     
     #toys
     "trex": 0,
@@ -34,4 +34,4 @@ cluePanelLED = {
     "5": 0
 }
 
-print("The blue piece is at position " , cluePanelLED["Blue"])
+print("The blue piece is at position " , cluePanelLED[1])
