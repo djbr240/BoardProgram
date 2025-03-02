@@ -6,7 +6,7 @@
 
 # This program is meant to be run on the Raspberry Pi Pico 2
 
-from machine import ADC, Pin
+from machine import I2C, Pin
 import neopixel
 from utime import sleep
 import utime
@@ -56,35 +56,14 @@ Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 hall_sensor_threshold = 1000
 button_threshold = 500
 
-# Initialize ADC for MUX SIG output
-ADC0_MUX1 = ADC(Pin(26))  # ADC pin connected to the MUX SIG output
-ADC1_MUX2 = ADC(Pin(27))
-ADC2_MUX3 = ADC(Pin(28))
+#I2C GPIO Expander configuration
 
-# GPIO pins for MUX select lines
-MUX1_select_pins = [
-    Pin(4, Pin.OUT),  # S0
-    Pin(5, Pin.OUT),  # S1
-    Pin(6, Pin.OUT),  # S2
-    Pin(7, Pin.OUT),  # S3
-]
-
-MUX2_select_pins = [
-    Pin(8, Pin.OUT),  # S0
-    Pin(9, Pin.OUT),  # S1
-    Pin(10, Pin.OUT),  # S2
-    Pin(11, Pin.OUT),  # S3
-]
-
-MUX3_select_pins = [
-    Pin(12, Pin.OUT),  # S0
-    Pin(13, Pin.OUT),  # S1
-    Pin(14, Pin.OUT),  # S2
-    Pin(15, Pin.OUT),  # S3
-]
+# I2C Configuration (PCF8575 connected to GP5 (SDA) and GP4 (SCL))
+i2c = I2C(0, scl=Pin(5), sda=Pin(4), freq=400000)  # 400kHz I2C speed
+PCF8575_ADDRESS = 0x20  # Default I2C address of PCF8575
 
 # RFID configuration
-RFIDreader = MFRC522(spi_id=0,sck=2,miso=0,mosi=3,cs=1,rst=16)
+RFIDreader = MFRC522(spi_id=0,sck=2,miso=0,mosi=3,cs=1,rst=15)
 
 ################################################################
 # Piece identification, graph, and LED locations on the board and panels
