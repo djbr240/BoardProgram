@@ -6,7 +6,7 @@
 
 # This program is meant to be run on the Raspberry Pi Pico 2
 
-from machine import I2C, ADC, Pin
+from machine import ADC, Pin
 import neopixel
 from utime import sleep
 import utime
@@ -41,37 +41,47 @@ PanelLED4_pin = Pin(18, Pin.OUT)
 Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 
 # We currently don't have a solution for having a 5th panel (out of pins)
-PanelLED5_num_pixels = 26
-PanelLED5_pin = Pin(17, Pin.OUT)
-Panel5_pixels = neopixel.NeoPixel(PanelLED5_pin, PanelLED5_num_pixels)
+#PanelLED5_num_pixels = 26
+#PanelLED5_pin = Pin(17, Pin.OUT)
+#Panel5_pixels = neopixel.NeoPixel(PanelLED5_pin, PanelLED5_num_pixels)
 
 # We currently don't have a solution for having a 6th panel (out of pins)
-PanelLED6_num_pixels = 26
-PanelLED6_pin = Pin(16, Pin.OUT)
-Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
+#PanelLED6_num_pixels = 26
+#PanelLED6_pin = Pin(26, Pin.OUT)
+#Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
-# I2C Configuration for 4 PCF8575 boards on GPIO 0-7
-i2c_buses = [
-    I2C(0, scl=Pin(1), sda=Pin(0), freq=400000),  # I2C on GP0 and GP1
-    I2C(1, scl=Pin(3), sda=Pin(2), freq=400000),  # I2C on GP2 and GP3
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP4 and GP5
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000)   # I2C on GP6 and GP7
-]
 
-# PCF8575 I2C Address (assuming the same address on all buses)
-PCF8575_ADDRESS = 0x20  # Default I2C address of PCF8575
 
-#TODO: Change pin numbers here when it's figured out where everything else is connecting to
-# This is for reading the Potentiometers on the panels
+# Mux configuration
+
+hall_sensor_threshold = 1000
+button_threshold = 500
+
 # Initialize ADC for MUX SIG output
-ADC0_MUX = ADC(Pin(26))  # ADC pin connected to the MUX SIG output
+ADC0_MUX1 = ADC(Pin(26))  # ADC pin connected to the MUX SIG output
+ADC1_MUX2 = ADC(Pin(27))
+ADC2_MUX3 = ADC(Pin(28))
 
 # GPIO pins for MUX select lines
-MUX_select_pins = [
+MUX1_select_pins = [
     Pin(4, Pin.OUT),  # S0
     Pin(5, Pin.OUT),  # S1
     Pin(6, Pin.OUT),  # S2
     Pin(7, Pin.OUT),  # S3
+]
+
+MUX2_select_pins = [
+    Pin(8, Pin.OUT),  # S0
+    Pin(9, Pin.OUT),  # S1
+    Pin(10, Pin.OUT),  # S2
+    Pin(11, Pin.OUT),  # S3
+]
+
+MUX3_select_pins = [
+    Pin(12, Pin.OUT),  # S0
+    Pin(13, Pin.OUT),  # S1
+    Pin(14, Pin.OUT),  # S2
+    Pin(15, Pin.OUT),  # S3
 ]
 
 # RFID configuration
@@ -80,7 +90,6 @@ RFIDreader = MFRC522(spi_id=0,sck=2,miso=0,mosi=3,cs=1,rst=16)
 ################################################################
 # Piece identification, graph, and LED locations on the board and panels
 
-#TODO: Update graph to new config
 # Graph represented as an adjacency list
 # Left side is the source, in [] is the source's neighbors
 graph = {
@@ -128,7 +137,6 @@ graph = {
     41: [33]
 }
 
-#TODO: Change these based on new config (white and yellow spaces and character start spaces and furniture start spaces)
 # Yellow spaces positions
 yellow_space = [0, 4, 23, 29, 32, 36]
 
@@ -303,14 +311,10 @@ LED_COLORS = {
     5: (0, 0, 255)       # Blue
 }
 
-
-
 def is_spinner_button_pressed():
-    for bus_index, i2c in enumerate(i2c_buses):
-        value = read_pcf8575(i2c)  # Read GPIO state
-        for pin in range(16):  # Check each pin (0 to 15)
-            if not (value & (1 << pin)):  # Active-low button press (0 means pressed)
-                print(f"Button on PCF8575 {bus_index}, Pin P{pin} is pressed")
+    select_mux_channel(MUX3_select_pins, 15)  # Select Channel 15
+    #print(ADC2_MUX3.read_u16())
+    return ADC2_MUX3.read_u16() < button_threshold
 
 # Randomly generate a number, while also making a spinning animation. Return what the spinner lands on
 def playSpinnerSpinAndStop():
@@ -401,86 +405,93 @@ def playSpinnerSpinAndStop():
 
 ################################################################
 
-# This function goes through every channel in the PCF Boards and checks all readings from the Magnet Switches
-# It then returns a list of all the Magnet Switches that detected a magnetic presence
+# This function goes through every channel in the MUXs and checks all readings from the Hall Sensors
+# It then returns a list of all the Hall Sensors that detected a magnetic presence
 # This function will need to be called every time the position needs to be updated
+# Function to select a channel on a MUX
 
-# Read the outputs of the PCF8575 board
-def read_pcf8575(i2c):
-    data = i2c.readfrom(PCF8575_ADDRESS, 2)  # Read 2 bytes
-    return (data[1] << 8) | data[0]  # Combine into a 16-bit value
+def select_mux_channel(mux_pins, channel):
+    for i, pin in enumerate(mux_pins):
+        pin.value((channel >> i) & 1)  # Set the pin value based on the channel bits
         
-def read_magnet_switches():
+def read_hall_sensors():
     """
-    Reads all 42 Magnet Switches (across 3 PCF boards)
+    Reads all 42 Hall sensors (across 3 MUXs), checks if their ADC value is below the threshold, 
     and returns a list of sensor indices where a magnetic presence is detected.
     """
     
-    sensor_states = []
-    
-    for bus_index, i2c in enumerate(i2c_buses):
-        value = read_pcf8575(i2c)  # Read GPIO state
-        for pin in range(16):  # Check each pin (0 to 15)
-            sensor_id = bus_index * 16 + pin  # Calculate sensor index (0 to 47)
-            if sensor_id < 42:  # Only check the first 42 sensors
-                state = not (value & (1 << pin))  # Active-low: 0 when magnetic field detected
-                sensor_states.append(state)
-                if state:
-                    print(f"Sensor {sensor_id} is triggered")
+    detected_positions = []  # List to store detected positions
 
-    return sensor_states
+    # Iterate through MUX1 channels (0–15)
+    for channel in range(16):
+        select_mux_channel(MUX1_select_pins, channel)
+        adc_value = ADC0_MUX1.read_u16()  # Read ADC value
+        if adc_value < hall_sensor_threshold:
+            detected_positions.append(channel)
+    
+    # Iterate through MUX2 channels (16–31)
+    for channel in range(16):
+        select_mux_channel(MUX2_select_pins, channel)
+        adc_value = ADC1_MUX2.read_u16()  # Read ADC value
+        if adc_value < hall_sensor_threshold:
+            detected_positions.append(channel + 16)  # Offset by 16 for MUX2
+
+    # Iterate through MUX3 channels (32–41)
+    for channel in range(10):  # Only process channels 0–9 on MUX3
+        select_mux_channel(MUX3_select_pins, channel)
+        adc_value = ADC2_MUX3.read_u16()  # Read ADC value
+        if adc_value < hall_sensor_threshold:
+            detected_positions.append(channel + 32)  # Offset by 32 for MUX3
+
+    return detected_positions  # Return the list of detected positions
 
 
 # This function takes the previous reading from read_hall_sensors(), calls read_hall_sensors() again and compares them to find the difference from the last reading
 
     
-         
+                
 # Since for MUX3 channels 10-15, we are using those for Potentiometer and Button readings, we need a function to go through those MUX3 Channels
 # We want to have Potentiometer and Buttons separated since they're doing significantly different functions
 # This is a map of those assignments:
-# MUX Channel 0 = Panel 1 Potentiometer
-# MUX Channel 1 = Panel 2 Potentiometer
-# MUX Channel 2 = Panel 3 Potentiometer
-# MUX Channel 3 = Panel 4 Potentiometer
-# MUX Channel 4 = Panel 5 Potentiometer
-# MUX Channel 5 = Panel 6 Potentiometer
-# MUX Channel 6 =
-# MUX Channel 7 =
-# MUX Channel 8 =
-# MUX Channel 9 =
-# MUX Channel 10 =
-# MUX Channel 11 =
-# MUX Channel 12 =
-# MUX Channel 13 =
-# MUX Channel 14 =
-# MUX Channel 15 =
-def select_mux_channel(mux_pins, channel):
-    for i, pin in enumerate(mux_pins):
-        pin.value((channel >> i) & 1)  # Set the pin value based on the channel bits
-        
+# MUX3 Channel 10 = Potentiometer
+# MUX3 Channel 11 = Button1
+# MUX3 Channel 12 = Button2
+# MUX3 Channel 13 = Button3
+# MUX3 Channel 14 = Button4
+# MUX3 Channel 15 = Spinner Button
 def readPotentiometer():
     # Read MUX3 Channel 15
-    select_mux_channel(MUX_select_pins, 10)
-    adc_value = ADC0_MUX.read_u16()  # Read ADC value
+    select_mux_channel(MUX3_select_pins, 10)
+    adc_value = ADC2_MUX3.read_u16()  # Read ADC value
     return adc_value  # Return the Potentiometer value
 
 # Reads MUX3 Channels 10-15 to see if a button is pressed. Return the button number pressed
 def readButtons():
-    value = read_pcf8575()  # Read GPIO state from PCF8575
+    # Read MUX3 Channels 11-15
+    select_mux_channel(MUX3_select_pins, 11)
+    button1_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
+    
+    select_mux_channel(MUX3_select_pins, 12)
+    button2_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
+    
+    select_mux_channel(MUX3_select_pins, 13)
+    button3_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
+    
+    select_mux_channel(MUX3_select_pins, 14)
+    button4_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
+    
 
-    # Check specific pins (P10-P14) for button presses
-    button1_pressed = not (value & (1 << 10))  # P10
-    button2_pressed = not (value & (1 << 11))  # P11
-    button3_pressed = not (value & (1 << 12))  # P12
-    button4_pressed = not (value & (1 << 13))  # P13
-    button5_pressed = not (value & (1 << 14))  # P14
+    # This is for the spinner button
+    #select_mux_channel(MUX3_select_pins, 15)
+    #button5_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
     buttonPressed = 0
     if button1_pressed: buttonPressed = 1
     if button2_pressed: buttonPressed = 2
     if button3_pressed: buttonPressed = 3
     if button4_pressed: buttonPressed = 4
-    if button5_pressed: buttonPressed = 5
+    #if button5_pressed: buttonPressed = 5
+    
     
     return buttonPressed
 
@@ -721,7 +732,7 @@ def testFunction():
         while True:
             print("Testing Hall Sensors...")
             # Read Hall sensors and get detected positions
-            detected_positions = read_magnet_switches()
+            detected_positions = read_hall_sensors()
             print("Detected positions:", detected_positions)
 
             # Test LEDs based on detected positions
