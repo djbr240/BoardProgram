@@ -767,16 +767,16 @@ def GameSetup():
 
 def main():
     # Startup process
-    StartupProcess()
+    #StartupProcess()
     
     # Game setup
-    GameSetup()
+    #GameSetup()
 
     # Randomize pieces
 
     #while True:
     #    # Test function
-    #    testFunction()
+        testFunction()
 
     # Structure of the general gameplay
     # Start game loop
