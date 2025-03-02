@@ -1,3 +1,5 @@
+from main import light_up_position
+
 # This is the Player class, where all of the information for each player is created
 class Player:
     def __init__(self, pieceID, position=0, panel=None):
