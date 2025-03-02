@@ -19,7 +19,7 @@ import random
 # This is the only place where Pins, number of LEDs, threshold values, etc are defined.
 
 # Board LED config
-Board_Spinner_LED_num_pixels = 48 # 42 Board LEDs and 6 Spinner LEDs = 48
+Board_Spinner_LED_num_pixels = 25 # 42 Board LEDs and 6 Spinner LEDs = 48
 Board_Spinner_LED_pin = Pin(22, Pin.OUT)
 Board_Spinner_pixels = neopixel.NeoPixel(Board_Spinner_LED_pin, Board_Spinner_LED_num_pixels)
 
@@ -53,7 +53,7 @@ Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 
 # Mux configuration
 
-hall_sensor_threshold = 500
+hall_sensor_threshold = 1000
 button_threshold = 500
 
 # Initialize ADC for MUX SIG output
@@ -166,21 +166,21 @@ furniture_start_spaces = {
 # Dictionary for the character pieces and the RFID links
 # All zeros as a placeholder for now
 pieceRFID = {
-    "Blue": 0,
-    "Purple": 0,
-    "Red": 0,
-    "Yellow": 0,
-    "Pink": 0,
-    "Green": 0,
+    "Blue": 40551758664916996,
+    "Purple": 40551758664917252,
+    "Red": 40551758664917508,
+    "Yellow": 40551758664917764,
+    "Pink": 40551758664918020,
+    "Green": 40551758664847108,
 }
 
 furnitureRFID = {
-    "pooltable": 0,
-    "desk": 0,
-    "chair": 0,
-    "piano": 0,
-    "plant": 0,
-    "diningtable": 0
+    "pooltable": 40551758664847364,
+    "desk": 40551758664847620,
+    "chair":40551758664847876,
+    "piano": 40551758664848132,
+    "plant": 40551758664856068,
+    "diningtable": 40551758664856324
 }
 
 # The LED position for the clue panels
@@ -479,15 +479,17 @@ def readButtons():
     select_mux_channel(MUX3_select_pins, 14)
     button4_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
-    select_mux_channel(MUX3_select_pins, 15)
-    button5_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
+
+    # This is for the spinner button
+    #select_mux_channel(MUX3_select_pins, 15)
+    #button5_pressed = bool(ADC2_MUX3.read_u16() < button_threshold)
     
     buttonPressed = 0
     if button1_pressed: buttonPressed = 1
     if button2_pressed: buttonPressed = 2
     if button3_pressed: buttonPressed = 3
     if button4_pressed: buttonPressed = 4
-    if button5_pressed: buttonPressed = 5
+    #if button5_pressed: buttonPressed = 5
     
     
     return buttonPressed
@@ -504,6 +506,364 @@ def readRFID():
                 print("CARD ID: "+str(card))
                 return card
                 break
+
+def identify_rfid(card, pieceRFID, furnitureRFID):
+    # Check character pieces
+    for name, rfid_value in pieceRFID.items():
+        if card == rfid_value:
+            return name
+
+    # Check furniture pieces
+    for name, rfid_value in furnitureRFID.items():
+        if card == rfid_value:
+            return name
+
+    # If not found in either dictionary
+    return None
+
+
+
+
+def displayRFID(name,pixels):
+
+    brightness = int(200)
+    if name == "Yellow":
+        item = 19
+    
+    if name == "Red":
+        item = 20
+
+    if name == "Green":
+        item = 21
+
+    if name == "Blue":
+        item = 22
+
+    if name == "Pink":
+        item = 23
+
+    if name == "Purple":
+        item = 24
+
+    if name == "piano":
+        item = 0
+
+    if (item == 0):
+
+        person = 0
+        toy = 0
+        time = 0
+
+        mustard = 0
+
+        scarlett = 0
+
+        green = 0
+
+        peacock = 0
+
+        orchid = 0
+
+        plum = 0
+
+        rex = 0
+
+        car = 0
+
+        bear = 0
+
+        potato = 0
+
+        xylophone = 0
+
+        ball = 0
+
+        pool = 0
+
+        desk = 0
+
+        chair = 0
+
+        piano = 0
+
+        plant = 0
+
+        dining = 0
+
+        time11 = 0
+
+        time12 = 0
+
+        time1 = 0
+
+        time2 = 0
+
+        time3 = 0
+
+        time4 = 0
+
+        time5 = 0
+
+        pixels.fill ((0,0,0))
+
+
+    # Check the input and set corresponding 
+    # piece to 1 if correct person has not been found
+    if (item == 1 and person == 0):
+        mustard = 1
+
+    if (item == 2 and person == 0):
+        scarlett = 1
+
+    if (item == 3 and person == 0):
+        green = 1
+
+    if (item == 4 and person == 0):
+        peacock = 1
+
+    if (item == 5 and person == 0):
+        orchid = 1
+
+    if (item == 6 and person == 0):
+        plum = 1
+
+    # Check the input and set corresponding 
+    # piece to 1 if correct toy has not been found
+    if (item == 7 and toy == 0):
+        rex = 1
+
+    if (item == 8 and toy == 0):
+        car = 1
+
+    if (item == 9 and toy == 0):
+        bear = 1
+
+    if (item == 10 and toy == 0):
+        potato = 1
+
+    if (item == 11 and toy == 0):
+        xylophone = 1
+
+    if (item == 12 and toy == 0):
+        ball = 1
+
+    if (item == 13):
+        pool = 1
+
+    if (item == 14):
+        desk = 1
+
+    if (item == 15):
+        chair = 1
+
+    if (item == 16):
+        piano = 1
+
+    if (item == 17):
+        plant = 1
+
+    if (item == 18):
+        dining = 1
+
+    # Check the input and set corresponding 
+    # piece to 1 if correct time has not been found
+    if (item == 19 and time == 0):
+        time11 = 1
+
+    if (item == 20 and time == 0):
+        time12 = 1
+
+    if (item == 21 and time == 0):
+        time1 = 1
+
+    if (item == 22 and time == 0):
+        time2 = 1
+
+    if (item == 23 and time == 0):
+        time3 = 1
+
+    if (item == 24 and time == 0):
+        time4 = 1
+
+    if (item == 25 and time == 0):
+        time5 = 1
+
+
+    # The following lights up each corresponding LED red
+    # depending on if the item is set to 1
+
+    if (mustard == 1):
+        pixels[19] = (brightness,0,0)
+
+    if (scarlett == 1):
+        pixels[20] = (brightness,0,0)
+
+    if (green == 1):
+        pixels[21] = (brightness,0,0)
+
+    if (peacock == 1):
+        pixels[22] = (brightness,0,0)
+
+    if (orchid == 1):
+        pixels[23] = (brightness,0,0)
+
+    if (plum == 1):
+        pixels[24] = (brightness,0,0)
+
+    if (rex == 1):
+        pixels[18] = (brightness,0,0)
+
+    if (car == 1):
+        pixels[17] = (brightness,0,0)
+
+    if (bear == 1):
+        pixels[16] = (brightness,0,0)
+
+    if (potato == 1):
+        pixels[15] = (brightness,0,0)
+
+    if (xylophone == 1):
+        pixels[14] = (brightness,0,0)
+
+    if (ball == 1):
+        pixels[13] = (brightness,0,0)
+
+    if (pool == 1):
+        pixels[7] = (brightness,0,0)
+
+    if (desk == 1):
+        pixels[8] = (brightness,0,0)
+
+    if (chair == 1):
+        pixels[9] = (brightness,0,0)
+
+    if (piano == 1):
+        pixels[10] = (brightness,0,0)
+
+    if (plant == 1):
+        pixels[11] = (brightness,0,0)
+
+    if (dining == 1):
+        pixels[12] = (brightness,0,0)
+
+    if (time11 == 1):
+        pixels[6] = (brightness,0,0)
+
+    if (time12 == 1):
+        pixels[5] = (brightness,0,0)
+
+    if (time1 == 1):
+        pixels[4] = (brightness,0,0)
+
+    if (time2 == 1):
+        pixels[3] = (brightness,0,0)
+
+    if (time3 == 1):
+        pixels[2] = (brightness,0,0)
+
+    if (time4 == 1):
+        pixels[1] = (brightness,0,0)
+
+    if (time5 == 1):
+        pixels[0] = (brightness,0,0)
+
+
+    # The following lights the LED green
+    # when it is the last person left
+    # and sets person to 1 to block previous code from making it red
+
+    if (mustard==0 and scarlett==1 and green==1 and peacock==1 and orchid==1 and plum==1):
+        pixels[19] = (0,brightness,0)
+        person = 1
+
+    if (mustard==1 and scarlett==0 and green==1 and peacock==1 and orchid==1 and plum==1):
+        pixels[20] = (0,brightness,0)
+        person = 1
+
+    if (mustard==1 and scarlett==1 and green==0 and peacock==1 and orchid==1 and plum==1):
+        pixels[21] = (0,brightness,0)
+        person = 1
+
+    if (mustard==1 and scarlett==1 and green==1 and peacock==0 and orchid==1 and plum==1):
+        pixels[22] = (0,brightness,0)
+        person = 1
+
+    if (mustard==1 and scarlett==1 and green==1 and peacock==1 and orchid==0 and plum==1):
+        pixels[23] = (0,brightness,0)
+        person = 1
+
+    if (mustard==1 and scarlett==1 and green==1 and peacock==1 and orchid==1 and plum==0):
+        pixels[24] = (0,brightness,0)
+        person = 1
+
+
+    # The following lights the LED green
+    # when it is the last toy left
+    # and sets toy to 1 to block previous code from making it red
+    if (rex==0 and car==1 and bear==1 and potato==1 and xylophone==1 and ball==1):
+        pixels[18] = (0,brightness,0)
+        toy = 1
+
+    if (rex==1 and car==0 and bear==1 and potato==1 and xylophone==1 and ball==1):
+        pixels[17] = (0,brightness,0)
+        toy = 1
+
+    if (rex==1 and car==1 and bear==0 and potato==1 and xylophone==1 and ball==1):
+        pixels[16] = (0,brightness,0)
+        toy = 1
+
+    if (rex==1 and car==1 and bear==1 and potato==0 and xylophone==1 and ball==1):
+        pixels[15] = (0,brightness,0)
+        toy = 1
+
+    if (rex==1 and car==1 and bear==1 and potato==1 and xylophone==0 and ball==1):
+        pixels[14] = (0,brightness,0)
+        toy = 1
+
+    if (rex==1 and car==1 and bear==1 and potato==1 and xylophone==1 and ball==0):
+        pixels[13] = (0,brightness,0)
+        toy = 1
+
+
+    # The following lights the LED green
+    # when it is the last time left
+    # and sets time to 1 to block previous code from making it red
+    if (time11==0 and time12==1 and time1==1 and time2==1 and time3==1 and time4==1 and time5==1):
+        pixels[6] = (0,brightness,0)
+        time = 1
+
+    if (time11==1 and time12==0 and time1==1 and time2==1 and time3==1 and time4==1 and time5==1):
+        pixels[5] = (0,brightness,0)
+        time = 1
+
+    if (time11==1 and time12==1 and time1==0 and time2==1 and time3==1 and time4==1 and time5==1):
+        pixels[4] = (0,brightness,0)
+        time = 1
+
+    if (time11==1 and time12==1 and time1==1 and time2==0 and time3==1 and time4==1 and time5==1):
+        pixels[3] = (0,brightness,0)
+        time = 1
+
+    if (time11==1 and time12==1 and time1==1 and time2==1 and time3==0 and time4==1 and time5==1):
+        pixels[2] = (0,brightness,0)
+        time = 1
+
+    if (time11==1 and time12==1 and time1==1 and time2==1 and time3==1 and time4==0 and time5==1):
+        pixels[1] = (0,brightness,0)
+        time = 1
+
+    if (time11==1 and time12==1 and time1==1 and time2==1 and time3==1 and time4==1 and time5==0):
+        pixels[0] = (0,brightness,0)
+        time = 1
+
+    #playerturn = False
+
+    item = 100
+    pixels.write()  # Send the data to the NeoPixels
+    sleep(0.1)  # Delay before updating colors again
+
+
+
     
 
 # The pathfinder is basically a Breadth First Search algorithm.
@@ -607,6 +967,7 @@ def testFunction():
     print("4: RFID options")
     print("5: Hall Sensor test")
     print("6: Test spinner")
+    print("7: Button test")
     
     # Get user input
     user_input = input("Enter your choice: ")
@@ -623,8 +984,49 @@ def testFunction():
         print("Test complete")
         
     elif user_input == "2":
-        print("Testing panel LEDs...")
-        # Light up all panel LEDs
+        user_input = input("Enter what part of the panels you want to test: \n1. Flash all leds on \n2. Light up clue")
+
+        if user_input == "1":
+            print("Testing panel LEDs...")
+            # Light up all panel LEDs
+            Panel1_pixels.fill((25, 25, 25))
+            Panel2_pixels.fill((25, 25, 25))
+            Panel1_pixels.write()
+            Panel2_pixels.write()
+            sleep(5)
+            Panel1_pixels.fill((0, 0, 0))
+            Panel2_pixels.fill((0, 0, 0))
+            Panel1_pixels.write()
+            Panel2_pixels.write()
+
+        if user_input == "2":
+            print("Which panel?")
+            if user_input == "1":
+                user_input = input("Input which clue: ")
+                print(f"Enabling led for clue: {user_input}")
+                # Determine clue from dictionary
+                while True:
+                    # Fetch the corresponding position from the dictionary
+                    if user_input in cluePanelLED:
+                        Panel1_pixels[cluePanelLED[user_input]]
+                        Panel1_pixels.write()
+                        print(f"The {user_input} piece is at position {cluePanelLED[user_input]}")
+                    else:
+                        print("Invalid input. Please enter a valid name from the dictionary.")
+
+            if user_input == "2":
+                user_input = input("Input which clue: ")
+                print(f"Enabling led for clue: {user_input}")
+                # Determine clue from dictionary
+                while True:
+                    # Fetch the corresponding position from the dictionary
+                    if user_input in cluePanelLED:
+                        Panel2_pixels[cluePanelLED[user_input]]
+                        Panel2_pixels.write()
+                        print(f"The {user_input} piece is at position {cluePanelLED[user_input]}")
+                    else:
+                        print("Invalid input. Please enter a valid name from the dictionary.")
+                
         
     elif user_input == "3":
         print("Enter the space number: ")
@@ -648,8 +1050,14 @@ def testFunction():
         #if user_input == "1":
         while True:
             card = readRFID()
+
+            item_name = identify_rfid(card, pieceRFID, furnitureRFID)
+
+            if item_name:
+                print(f"Identified {item_name}!")
+            
                 
-            if card == 17611714:
+            elif card == 17611714:
                 print("Test is Tag 1")
             elif card == 17450884:
                 print("Test is Tag 2")
@@ -690,6 +1098,24 @@ def testFunction():
                 result = playSpinnerSpinAndStop()
                 print(f"Spinner result: {result}")
                 sleep(0.5)  # Debounce delay to avoid multiple spins
+
+    elif user_input == "7":
+        print("Waiting for button press to light up position...")
+        
+        previous_btn_state = None  # To track the previous state of the button
+
+        while True:
+            btnInput = readButtons()
+
+            # Check for a transition from "not pressed" (None or 0) to "pressed" (non-zero value)
+            if btnInput and btnInput != previous_btn_state:
+                print(f"Button pressed: {btnInput}")
+            
+            # Update the previous button state
+            previous_btn_state = btnInput
+
+
+                    
             
     else:
         print("Invalid choice. Please try again.")
@@ -705,6 +1131,11 @@ def GameSetup():
     based on RFID scans. Players and furniture pieces are linked to their respective start locations.
     """
     players = []  # List to store player objects
+    assigned_rfids = set() # To track processed rfids
+
+    # Invert dictionaries for easier RFID lookup
+    rfid_to_piece = {v: k for k, v in pieceRFID.items()}
+    rfid_to_furniture = {v: k for k, v in furnitureRFID.items()}
 
     print("Waiting for players to press their 'end turn' buttons to assign panels...")
 
@@ -715,49 +1146,61 @@ def GameSetup():
         "Button3": Panel3_pixels,
         "Button4": Panel4_pixels,
     }
+
+    # Test code if we don't have buttons
+    # Just pretend that we did get a button press
+    button_pressed = "Button1"
+    panel_pixels = panel_assignments[button_pressed]
+    new_player = Player(position=0, pieceID="")
+    new_player.panel = panel_pixels
+    players.append(new_player)
+    print(f"Player assigned to {button_pressed}.")
     
     # Wait for players to press their "end turn" buttons and assign panels
-    assigned_buttons = set()
-    while len(assigned_buttons) < len(panel_assignments):
-        button_pressed = readButtons()  # Replace with your implementation of readButtons
-        if button_pressed in panel_assignments and button_pressed not in assigned_buttons:
-            print(f"{button_pressed} pressed! Assigning panel...")
-            panel_pixels = panel_assignments[button_pressed]
-            new_player = Player(position=0, cluesFound=[], pieceID="")
-            new_player.panel = panel_pixels
-            players.append(new_player)
-            assigned_buttons.add(button_pressed)
-            print(f"Player assigned to {button_pressed}.")
-        elif button_pressed:
-            print(f"{button_pressed} already assigned. Waiting for other players...")
+    #assigned_buttons = set()
+    #while len(assigned_buttons) < len(panel_assignments):
+    #    button_pressed = readButtons()  # Replace with your implementation of readButtons
+    #    if button_pressed in panel_assignments and button_pressed not in assigned_buttons:
+    #        print(f"{button_pressed} pressed! Assigning panel...")
+    #        panel_pixels = panel_assignments[button_pressed]
+    #        new_player = Player(position=0, cluesFound=[], pieceID="")
+    #        new_player.panel = panel_pixels
+    #        players.append(new_player)
+    #        assigned_buttons.add(button_pressed)
+    #        print(f"Player assigned to {button_pressed}.")
+    #    elif button_pressed:
+    #        print(f"{button_pressed} already assigned. Waiting for other players...")
 
-    # Setup players on board based on RFID scans
+
+    # Assign character pieces based on RFID scans
     print("Waiting for RFID scans to assign character pieces to players...")
-    for player in players:
-        print(f"Waiting for RFID scan for player using {player.panel}...")
-        scanned_rfid = None
-        while not scanned_rfid:  # Replace with actual RFID reading function
-            scanned_rfid = readRFID()  # Replace with actual function to read RFID
-        
-        # Assign pieceID to the player based on RFID scan
-        if scanned_rfid in pieceRFID:
-            player.pieceID = pieceRFID[scanned_rfid]
-            player.position = character_start_spaces[player.pieceID]
-            light_up_position(player.position)  # Light up initial position
-            print(f"Player piece {player.pieceID} assigned to start position {player.position}.")
-        else:
-            print("Invalid RFID scan. Please try again.")
-            continue  # Retry the RFID scan
+    while len(players) < len(panel_assignments):  # Adjust loop to allow 2–4 players
+        scanned_rfid = readRFID()  # Replace with actual RFID reading function
+        if scanned_rfid and scanned_rfid not in assigned_rfids:
+            if scanned_rfid in rfid_to_piece:
+                piece_name = rfid_to_piece[scanned_rfid]
+                player = Player(pieceID=piece_name, position=character_start_spaces[piece_name])
+                player.panel = panel_assignments[f"Button{len(players) + 1}"]  # Assign next available panel
+                light_up_position(player.position)  # Light up initial position
+                players.append(player)
+                assigned_rfids.add(scanned_rfid)
+                print(f"Player piece {piece_name} assigned to start position {player.position}.")
+            else:
+                print("Invalid RFID scan. Please try again.")
 
     # Setup furniture on board
     print("Setting up furniture pieces on board...")
-    for rfid, piece_name in furnitureRFID.items():
-        if piece_name in furniture_start_spaces:
-            position = furniture_start_spaces[piece_name]
-            light_up_position(position)  # Light up furniture position
-            print(f"Furniture piece {piece_name} placed at position {position}.")
+    for rfid, piece_name in rfid_to_furniture.items():
+        if rfid not in assigned_rfids:
+            if piece_name in furniture_start_spaces:
+                position = furniture_start_spaces[piece_name]
+                light_up_position(position)  # Light up furniture position
+                assigned_rfids.add(rfid)
+                print(f"Furniture piece {piece_name} placed at position {position}.")
+            else:
+                print(f"Error: Start position for {piece_name} not found.")
         else:
-            print(f"Error: Start position for {piece_name} not found.")
+            print(f"Furniture piece {piece_name} already placed.")
 
     print("Game setup complete. Players are ready to start!")
     return players
@@ -774,8 +1217,13 @@ def main():
 
     # Randomize pieces
 
+<<<<<<< HEAD
     #while True:
     #    # Test function
+=======
+    while True:
+        # Test function
+>>>>>>> 1c47c6cfd33e7bbc1fd12e790b331a70b5de96a0
         testFunction()
 
     # Structure of the general gameplay

@@ -1,37 +1,47 @@
 # The LED position for the clue panels
 cluePanelLED = {
     #characters
-    "Blue": 1,
-    "Purple": 2,
-    "Red": 3,
-    "Yellow": 4,
-    "Pink": 5,
-    "Green": 6,
-    
+    "yellow": 19,
+    "red": 20,
+    "green": 21,
+    "blue": 22,
+    "pink": 23,
+    "purple": 24,
+
     #toys
-    "trex": 0,
-    "racecar": 0,
-    "teddybear": 0,
-    "mr_potatohead": 0,
-    "xylophone": 0,
-    "ball": 0,
-    
-    #locations
-    "pooltable": 0,
-    "desk": 0,
-    "chair": 0,
-    "piano": 0,
-    "plant": 0,
-    "diningtable": 0,
-    
+    "trex": 18,
+    "racecar": 17,
+    "teddybear": 16,
+    "mr_potatohead": 15,
+    "xylophone": 14,
+    "ball": 13,
+
+    #furniture
+    "pooltable": 7,
+    "desk": 8,
+    "chair": 9,
+    "piano": 10,
+    "plant": 11,
+    "diningtable": 12,
+
     #time
-    "11": 0,
-    "12": 0,
-    "1": 0,
-    "2": 0,
-    "3": 0,
-    "4": 0,
+    "11": 6,
+    "12": 5,
+    "1": 4,
+    "2": 3,
+    "3": 2,
+    "4": 1,
     "5": 0
 }
 
-print("The blue piece is at position " , cluePanelLED[1])
+
+
+while True:
+    # Get user input
+    userinput = input("Enter the piece: ")
+
+    # Fetch the corresponding position from the dictionary
+    if userinput in cluePanelLED:
+        print(f"The {userinput} piece is at position {cluePanelLED[userinput]}")
+    else:
+        print("Invalid input. Please enter a valid name from the dictionary.")
