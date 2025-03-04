@@ -41,10 +41,10 @@ Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
 # I2C Configuration for 4 PCF8575 boards on GPIO 0-7
 i2c_buses = [
-    I2C(0, scl=Pin(1), sda=Pin(0), freq=400000),  # I2C on GP0 and GP1
-    I2C(1, scl=Pin(3), sda=Pin(2), freq=400000),  # I2C on GP2 and GP3
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP4 and GP5
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000)   # I2C on GP6 and GP7
+    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP0 and GP1
+    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP2 and GP3
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP4 and GP5
+    I2C(1, scl=Pin(27), sda=Pin(26), freq=400000)   # I2C on GP6 and GP7
 ]
 
 # PCF8575 I2C Address (assuming the same address on all buses)
@@ -53,7 +53,7 @@ PCF8575_ADDRESS = 0x20  # Default I2C address of PCF8575
 #TODO: Change pin numbers here when it's figured out where everything else is connecting to
 # This is for reading the Potentiometers on the panels
 # Initialize ADC for MUX SIG output
-ADC0_MUX = ADC(Pin(26))  # ADC pin connected to the MUX SIG output
+ADC0_MUX = ADC(Pin(28))  # ADC pin connected to the MUX SIG output
 
 # GPIO pins for MUX select lines
 MUX_select_pins = [

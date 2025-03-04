@@ -342,7 +342,7 @@ def testFunction():
     print("2: Test panel LEDs")
     print("3: Test pathfinder")
     print("4: RFID options")
-    print("5: Hall Sensor test")
+    print("5: Magnet Switch test")
     print("6: Test spinner")
     print("7: Button test")
     
@@ -451,8 +451,8 @@ def testFunction():
 
     elif user_input == "5":
         while True:
-            print("Testing Hall Sensors...")
-            # Read Hall sensors and get detected positions
+            print("Testing Magnet Switches...")
+            # Read Magnet Switches and get detected positions
             detected_positions = read_magnet_switches()
             print("Detected positions:", detected_positions)
 

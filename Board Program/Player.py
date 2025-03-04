@@ -1,4 +1,4 @@
-from main import light_up_position
+#from main import light_up_position
 
 # This is the Player class, where all of the information for each player is created
 class Player:
@@ -61,7 +61,7 @@ class Player:
             if self.position not in self.panel_leds_lit:
                 self.panel_leds_lit.append(self.position)
                 # Light up the position on the panel
-                light_up_position(self.position)  # Use your existing function to light up the position
+                #light_up_position(self.position)  # Use your existing function to light up the position
         else:
             print("No panel assigned to this player.")
 
