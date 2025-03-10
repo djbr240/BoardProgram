@@ -1,41 +1,54 @@
 from machine import I2C, Pin
-import neopixel
-import time
+import utime
 
-# I2C Configuration (PCF8575 connected to GP0 (SDA) and GP1 (SCL))
-i2c = I2C(0, scl=Pin(5), sda=Pin(4), freq=400000)  # 400kHz I2C speed
-PCF8575_ADDRESS = 0x20  # Default I2C address of PCF8575
+# Initialize I2C buses for four PCF8575 boards
+i2c_buses = [
+    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP4 and GP5
+    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP6 and GP7
+    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP8 and GP7
+    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000)  # I2C on GP26 and GP27
 
-# NeoPixel Configuration (5 LEDs on GP15)
-NUM_PIXELS = 5
-neo = neopixel.NeoPixel(Pin(14), NUM_PIXELS)
+]
 
-# Function to read 16-bit value from PCF8575
-def read_pcf8575():
-    data = i2c.readfrom(PCF8575_ADDRESS, 2)  # Read 2 bytes
-    return (data[1] << 8) | data[0]  # Combine into a 16-bit value
+# PCF8575 I2C addresses
+PCF8575_ADDRESSES = [0x20, 0x21, 0x22, 0x23]
 
-# Function to set NeoPixels to white
-def set_neopixels_white():
-    for i in range(NUM_PIXELS):
-        neo[i] = (255, 255, 255)  # White color
-    neo.write()
+# Read data from a specific PCF8575
+def read_port(i2c, address):
+    data = bytearray(2)
+    i2c.readfrom_into(address, data)
+    return data[0] | (data[1] << 8)
 
-# Function to turn off NeoPixels
-def turn_off_neopixels():
-    for i in range(NUM_PIXELS):
-        neo[i] = (0, 0, 0)  # Off
-    neo.write()
+# Write data to a specific PCF8575
+def write_port(i2c, address, value):
+    data = bytearray([value & 0xFF, (value >> 8) & 0xFF])
+    i2c.writeto(address, data)
 
-while True:
-    value = read_pcf8575()  # Read all GPIO states
-    P11_state = (value >> 0) & 1  # Extract bit 11 (P11)
-    
-    if P11_state:
-        print("P11 is HIGH - Turning ON NeoPixels")
-        set_neopixels_white()
+# Read a specific pin state (0-15) from a specific PCF8575
+def read_pin(i2c, address, pin):
+    port_value = read_port(i2c, address)
+    return (port_value >> pin) & 1
+
+# Set a specific pin state (0-15) on a specific PCF8575
+def write_pin(i2c, address, pin, value):
+    port_value = read_port(i2c, address)
+    if value:
+        port_value |= (1 << pin)
     else:
-        print("P11 is LOW - Turning OFF NeoPixels")
-        turn_off_neopixels()
+        port_value &= ~(1 << pin)
+    write_port(i2c, address, port_value)
 
-    time.sleep(0.1)  # Wait for 500ms
+# Initialize all pins to low state on all PCF8575 boards
+for i2c, address in zip(i2c_buses, PCF8575_ADDRESSES):
+    write_port(i2c, address, 0x0000)
+
+# Continuously read and print the pin states of all PCF8575 boards
+while True:
+    for i, (i2c, address) in enumerate(zip(i2c_buses, PCF8575_ADDRESSES)):
+        port_value = read_port(i2c, address)
+        print(f"PCF8575 Board {i} (Address {address:#02x}) Raw Value: {bin(port_value)}")
+
+        for pin in range(16):
+            pin_state = read_pin(i2c, address, pin)
+            print(f"Board {i} Pin {pin}: {'HIGH' if pin_state else 'LOW'}")
+    utime.sleep(1)

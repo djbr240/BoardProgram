@@ -137,10 +137,18 @@ def playSpinnerSpinAndStop():
 # It then returns a list of all the Magnet Switches that detected a magnetic presence
 # This function will need to be called every time the position needs to be updated
 
+def write_port(value):
+    data = bytearray([value & 0xFF, (value >> 8) & 0xFF])
+    i2c_buses.writeto(PCF8575_ADDRESS, data)
+
+# Initialize the PCF8575 boards
+write_port(0x0000)
+
 # Read the outputs of the PCF8575 board
 def read_pcf8575(i2c):
-    data = i2c.readfrom(PCF8575_ADDRESS, 2)  # Read 2 bytes
-    return (data[1] << 8) | data[0]  # Combine into a 16-bit value
+    data = bytearray(2)
+    i2c_buses.readfrom_into(PCF8575_ADDRESS, data)
+    return data[0] | (data[1] << 8)
         
 def read_magnet_switches():
     """
@@ -457,13 +465,13 @@ def testFunction():
             print("Detected positions:", detected_positions)
 
             # Test LEDs based on detected positions
-            for i in range(len(Board_Spinner_pixels)):
-                if i in detected_positions:
-                    Board_Spinner_pixels[i] = (0, 255, 0)  # Green for detected positions
-                else:
-                    Board_Spinner_pixels[i] = (0, 0, 0)  # Off if not detected
-            Board_Spinner_pixels.write()
-            sleep(0.1)
+            # for i in range(len(Board_Spinner_pixels)):
+            #     if i in detected_positions:
+            #         Board_Spinner_pixels[i] = (0, 255, 0)  # Green for detected positions
+            #     else:
+            #         Board_Spinner_pixels[i] = (0, 0, 0)  # Off if not detected
+            # Board_Spinner_pixels.write()
+            # sleep(0.1)
 
     elif user_input == "6":
         print("Waiting for button press to spin...")
