@@ -8,9 +8,10 @@
 
 from machine import I2C, ADC, Pin
 import neopixel
-from utime import sleep
 import utime
+from utime import sleep
 from mfrc522 import MFRC522
+from pcf7585 import *
 import random
 from Player import Player
 from config import *
@@ -34,8 +35,6 @@ LED_COLORS = {
     4: (0, 0, 255),      # Blue
     5: (0, 0, 255)       # Blue
 }
-
-
 
 def is_spinner_button_pressed():
     for bus_index, i2c in enumerate(i2c_buses):
@@ -139,36 +138,25 @@ def playSpinnerSpinAndStop():
 
 def write_port(value):
     data = bytearray([value & 0xFF, (value >> 8) & 0xFF])
-    i2c_buses.writeto(PCF8575_ADDRESS, data)
+    i2c_buses.writeto(PCF8575_ADDRESSES, data)
 
-# Initialize the PCF8575 boards
-write_port(0x0000)
 
-# Read the outputs of the PCF8575 board
-def read_pcf8575(i2c):
-    data = bytearray(2)
-    i2c_buses.readfrom_into(PCF8575_ADDRESS, data)
-    return data[0] | (data[1] << 8)
+
         
 def read_magnet_switches():
-    """
-    Reads all 42 Magnet Switches (across 3 PCF boards)
-    and returns a list of sensor indices where a magnetic presence is detected.
-    """
-    
-    sensor_states = []
-    
-    for bus_index, i2c in enumerate(i2c_buses):
-        value = read_pcf8575(i2c)  # Read GPIO state
-        for pin in range(16):  # Check each pin (0 to 15)
-            sensor_id = bus_index * 16 + pin  # Calculate sensor index (0 to 47)
-            if sensor_id < 42:  # Only check the first 42 sensors
-                state = not (value & (1 << pin))  # Active-low: 0 when magnetic field detected
-                sensor_states.append(state)
-                if state:
-                    print(f"Sensor {sensor_id} is triggered")
+    # We have 42 magnet switches across 3 pcf boards
+    # Board 1 is full, board 2 is full, board 3 contains 10 of the magnet switches
+    # To properly read all the magnet switches, we need to filter out what's on board 3 pins 10-14 and the entire of board 4
+    # This means that we use read_pcf() to read all pcf boards and remove the states from board 3 10-14 and board 4
 
-    return sensor_states
+    positions = []
+    
+    # Read all states from the 4 pcf boards
+    positions = read_pcf()
+
+    # After read_pcf() is called, the positions list will be populated with 64 values, we only want the first 42 states
+    # So just return the first 42 states
+    return positions[:41]
 
 
 # This function takes the previous reading from read_hall_sensors(), calls read_hall_sensors() again and compares them to find the difference from the last reading
@@ -206,14 +194,25 @@ def readPotentiometer():
 
 # Reads MUX3 Channels 10-15 to see if a button is pressed. Return the button number pressed
 def readButtons():
-    value = read_pcf8575()  # Read GPIO state from PCF8575
+    # The buttons are going to be connected to the last 6 pins on the pcf board, so we use read_pcf to get all the states
+    # We then remove everything else
+
+    values = []
+
+    pcf_init()
+    values = read_pcf()  # Read GPIO state from PCF8575
+    #print(values)
+    # Remove the non-button states
+    values = values[58:64]
+    #print(values)
 
     # Check specific pins (P10-P14) for button presses
-    button1_pressed = not (value & (1 << 10))  # P10
-    button2_pressed = not (value & (1 << 11))  # P11
-    button3_pressed = not (value & (1 << 12))  # P12
-    button4_pressed = not (value & (1 << 13))  # P13
-    button5_pressed = not (value & (1 << 14))  # P14
+    button1_pressed = values[0]
+    button2_pressed = values[1]
+    button3_pressed = values[2]
+    button4_pressed = values[3]
+    button5_pressed = values[4]
+    button6_pressed = values[5]
     
     buttonPressed = 0
     if button1_pressed: buttonPressed = 1
@@ -221,6 +220,7 @@ def readButtons():
     if button3_pressed: buttonPressed = 3
     if button4_pressed: buttonPressed = 4
     if button5_pressed: buttonPressed = 5
+    if button6_pressed: buttonPressed = 6
     
     return buttonPressed
 
@@ -601,10 +601,15 @@ def main():
     #GameSetup()
 
     # Randomize pieces
-
+    #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
     while True:
         # Test function
-        testFunction()
+        #testFunction()
+        
+        print(readButtons())
+        sleep(0.5)
+
+        #read_pcf()
 
     # Structure of the general gameplay
     # Start game loop

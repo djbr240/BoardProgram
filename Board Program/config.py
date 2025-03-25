@@ -39,16 +39,16 @@ PanelLED6_num_pixels = 26
 PanelLED6_pin = Pin(16, Pin.OUT)
 Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
-# I2C Configuration for 4 PCF8575 boards on GPIO 0-7
+# Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP0 and GP1
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP2 and GP3
-    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP4 and GP5
-    I2C(1, scl=Pin(27), sda=Pin(26), freq=400000)   # I2C on GP6 and GP7
+    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C0 on pin 4 and 5
+    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  
+    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP8 and GP7
+    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000) 
 ]
 
-# PCF8575 I2C Address (assuming the same address on all buses)
-PCF8575_ADDRESS = 0x20  # Default I2C address of PCF8575
+# PCF8575 I2C addresses
+PCF8575_ADDRESSES = [0x20, 0x21, 0x22, 0x23]
 
 #TODO: Change pin numbers here when it's figured out where everything else is connecting to
 # This is for reading the Potentiometers on the panels
@@ -57,10 +57,10 @@ ADC0_MUX = ADC(Pin(28))  # ADC pin connected to the MUX SIG output
 
 # GPIO pins for MUX select lines
 MUX_select_pins = [
-    Pin(4, Pin.OUT),  # S0
-    Pin(5, Pin.OUT),  # S1
-    Pin(6, Pin.OUT),  # S2
-    Pin(7, Pin.OUT),  # S3
+    Pin(10, Pin.OUT),  # S0
+    Pin(11, Pin.OUT),  # S1
+    Pin(12, Pin.OUT),  # S2
+    Pin(13, Pin.OUT),  # S3
 ]
 
 # RFID configuration
