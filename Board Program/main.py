@@ -310,6 +310,13 @@ def light_up_position(position):
     else:
         print(f"Error: Position {position} is out of range.")
 
+# Get the LED position of the clue and light up that LED on the panel
+def light_up_panel_led(clue, panelID):
+    ledPos = cluePanelLED.get(clue, None)
+    if ledPos is not None:
+        panel[panelID][ledPos] = (255, 255, 255)
+        panel[panelID].write()
+        
 
 def accusationSystem():
     # TODO
@@ -437,12 +444,16 @@ def testFunction():
         while True:
             card = readRFID()
 
+            
+            # Fetch the corresponding piece and furniture from the dictionary
             item_name = identify_rfid(card, pieceRFID, furnitureRFID)
 
             if item_name:
                 print(f"Identified {item_name}!")
-            
-                
+                # Light up panel LED with that clue (we'll just do all the panels I guess..)
+                for i in range(1, len(panel)):
+                    light_up_panel_led(item_name, i)
+            # This is for the testing tags and cards. 
             elif card == 17611714:
                 print("Test is Tag 1")
             elif card == 17450884:

@@ -44,6 +44,16 @@ PanelLED6_num_pixels = 26
 PanelLED6_pin = Pin(16, Pin.OUT)
 Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
+# This is a list of for the panels so we can index them
+panel = {
+    1: Panel1_pixels,
+    2: Panel2_pixels,
+    3: Panel3_pixels,
+    4: Panel4_pixels,
+    5: Panel5_pixels,
+    6: Panel6_pixels
+}
+
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on GP8 and GP9
