@@ -12,7 +12,7 @@ Board_Spinner_LED_num_pixels = 25 # 42 Board LEDs and 6 Spinner LEDs = 48
 Board_Spinner_LED_pin = Pin(22, Pin.OUT)
 Board_Spinner_pixels = neopixel.NeoPixel(Board_Spinner_LED_pin, Board_Spinner_LED_num_pixels)
 
-# Panel LED config (there's 6 panels, with only room for 5 of them)
+# Panel LED config (there's 6 panels)
 PanelLED1_num_pixels = 26
 PanelLED1_pin = Pin(21, Pin.OUT)
 Panel1_pixels = neopixel.NeoPixel(PanelLED1_pin, PanelLED1_num_pixels)
@@ -41,16 +41,15 @@ Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on pin 4 and 5
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on GP8 and GP9
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP8 and GP7
+    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C2 on GP6 and GP7
     I2C(1, scl=Pin(7), sda=Pin(6), freq=400000) 
 ]
 
-# PCF8575 I2C addresses
+# PCF8575 I2C addresses - Note: This is configured using the solder pads on the back of the board (0x20 has none, 0x21 has the +1 pad soldered, and so on)
 PCF8575_ADDRESSES = [0x20, 0x21, 0x22, 0x23]
 
-#TODO: Change pin numbers here when it's figured out where everything else is connecting to
 # This is for reading the Potentiometers on the panels
 # Initialize ADC for MUX SIG output
 ADC0_MUX = ADC(Pin(28))  # ADC pin connected to the MUX SIG output
@@ -73,48 +72,48 @@ RFIDreader = MFRC522(spi_id=0,sck=2,miso=4,mosi=3,cs=5,rst=1)
 # Graph represented as an adjacency list
 # Left side is the source, in [] is the source's neighbors
 graph = {
-    0: [10],
-    1: [9],
-    2: [3, 8],
-    3: [2, 8],
-    4: [7],
-    5: [6],
-    6: [7],
-    7: [4, 6, 8, 15],
-    8: [2, 3, 7, 14],
-    9: [14],
-    10: [0, 11],
-    11: [10, 13],
-    12: [13],
-    13: [11, 14, 20],
-    14: [8, 9, 13, 15, 21],
-    15: [7, 14, 16, 19],
-    16: [15, 17],
-    17: [16],
-    18: [19, 28, 29],
-    19: [15, 18, 27],
-    20: [13, 21, 22, 23],
-    21: [14, 20, 22, 25],
-    22: [20, 21, 23],
-    23: [20, 22],
-    24: [25, 38],
-    25: [21, 24, 26, 37],
-    26: [25, 27],
-    27: [19, 26, 28, 31, 33],
-    28: [18, 27, 29],
-    29: [18, 28],
-    30: [31],
-    31: [27, 33],
+    0: [9],
+    1: [2, 8],
+    2: [1, 8, 14],
+    3: [7],
+    4: [6],
+    5: [16],
+    6: [16],
+    7: [5, 15],
+    8: [1, 2, 13],
+    9: [12, 13],
+    10: [12],
+    11: [12],
+    12: [9, 10, 13, 21, 22],
+    13: [8, 9, 12, 14, 20],
+    14: [2, 13, 15],
+    15: [7, 14, 16, 33],
+    16: [5, 6, 16, 19],
+    17: [18, 19],
+    18: [17, 19],
+    19: [16, 17, 18, 28],
+    20: [13, 26],
+    21: [12, 22, 23, 25],
+    22: [12, 21, 23],
+    23: [21, 22, 25],
+    24: [25],
+    25: [21, 23, 26],
+    26: [20, 25, 27, 36],
+    27: [26, 33, 34, 35],
+    28: [19, 29, 33],
+    29: [28],
+    30: [29],
+    31: [32, 41],
     32: [33],
-    33: [27, 31, 32, 35],
-    34: [35, 37],
-    35: [33, 34, 36],
-    36: [35, 37],
-    37: [25, 34, 36],
-    38: [24, 39],
-    39: [38],
-    40: [37],
-    41: [33]
+    33: [15, 27, 28, 32, 34],
+    34: [27, 33, 35, 39],
+    35: [27, 34, 39],
+    36: [26, 37],
+    37: [36, 38],
+    38: [37],
+    39: [34, 35],
+    40: [33],
+    41: [31]
 }
 
 #TODO: Change these based on new config (white and yellow spaces and character start spaces and furniture start spaces)
