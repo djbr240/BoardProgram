@@ -577,8 +577,8 @@ def GameSetup():
     print("Setting up furniture pieces on board...")
     for rfid, piece_name in rfid_to_furniture.items():
         if rfid not in assigned_rfids:
-            if piece_name in furniture_start_spaces:
-                position = furniture_start_spaces[piece_name]
+            if piece_name in furniture_spaces:
+                position = furniture_spaces[piece_name]
                 light_up_position(position)  # Light up furniture position
                 assigned_rfids.add(rfid)
                 print(f"Furniture piece {piece_name} placed at position {position}.")
