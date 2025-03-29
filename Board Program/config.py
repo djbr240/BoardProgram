@@ -68,7 +68,6 @@ RFIDreader = MFRC522(spi_id=0,sck=2,miso=4,mosi=3,cs=5,rst=1)
 ################################################################
 # Piece identification, graph, and LED locations on the board and panels
 
-#TODO: Update graph to new config
 # Graph represented as an adjacency list
 # Left side is the source, in [] is the source's neighbors
 graph = {
