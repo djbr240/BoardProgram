@@ -604,10 +604,10 @@ def main():
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
     while True:
         # Test function
-        #testFunction()
+        testFunction()
         
-        print(readButtons())
-        sleep(0.5)
+        #print(readButtons())
+        #sleep(0.5)
 
         #read_pcf()
 

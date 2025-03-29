@@ -41,8 +41,8 @@ Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
 
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C0 on pin 4 and 5
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on pin 4 and 5
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  
     I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP8 and GP7
     I2C(1, scl=Pin(7), sda=Pin(6), freq=400000) 
 ]
@@ -64,7 +64,7 @@ MUX_select_pins = [
 ]
 
 # RFID configuration
-RFIDreader = MFRC522(spi_id=0,sck=2,miso=0,mosi=3,cs=1,rst=16)
+RFIDreader = MFRC522(spi_id=0,sck=2,miso=4,mosi=3,cs=5,rst=1)
 
 ################################################################
 # Piece identification, graph, and LED locations on the board and panels
