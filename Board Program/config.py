@@ -8,9 +8,14 @@ from mfrc522 import MFRC522
 # This is the only place where Pins, number of LEDs, threshold values, etc are defined.
 
 # Board LED config
-Board_Spinner_LED_num_pixels = 25 # 42 Board LEDs and 6 Spinner LEDs = 48
-Board_Spinner_LED_pin = Pin(22, Pin.OUT)
-Board_Spinner_pixels = neopixel.NeoPixel(Board_Spinner_LED_pin, Board_Spinner_LED_num_pixels)
+Board_LED_num_pixels = 25 # 42 Board LEDs and 6 Spinner LEDs = 48
+Board_LED_pin = Pin(22, Pin.OUT)
+Board_pixels = neopixel.NeoPixel(Board_LED_pin, Board_LED_num_pixels)
+
+# Spinner LED config
+Spinner_LED_num_pixels = 6
+Spinner_LED_pin = Pin(26, Pin.OUT)
+Spinner_pixels = neopixel.NeoPixel(Spinner_LED_pin, Spinner_LED_num_pixels)
 
 # Panel LED config (there's 6 panels)
 PanelLED1_num_pixels = 26

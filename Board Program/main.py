@@ -38,11 +38,12 @@ LED_COLORS = {
 
 def is_spinner_button_pressed():
     for bus_index, i2c in enumerate(i2c_buses):
-        value = read_pcf8575(i2c)  # Read GPIO state
+        value = read_pcf(i2c)  # Read GPIO state
         for pin in range(16):  # Check each pin (0 to 15)
             if not (value & (1 << pin)):  # Active-low button press (0 means pressed)
                 print(f"Button on PCF8575 {bus_index}, Pin P{pin} is pressed")
 
+# TODO: This function needs to be rewritten since the spinner is not independent
 # Randomly generate a number, while also making a spinning animation. Return what the spinner lands on
 def playSpinnerSpinAndStop():
     delay = 0.01  # Starting delay
@@ -56,11 +57,11 @@ def playSpinnerSpinAndStop():
     while delay < 0.2:
         # Turn off all spinner LEDs
         for j in range(total_spinner_leds):
-            Board_Spinner_pixels[spinner_start_index + j] = (0, 0, 0)
+            Board_pixels[spinner_start_index + j] = (0, 0, 0)
 
         # Light up the current spinner LED using the color from LED_COLORS
-        Board_Spinner_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
-        Board_Spinner_pixels.write()
+        Board_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
+        Board_pixels.write()
         sleep(delay)
 
         # Move to the next spinner LED
@@ -73,11 +74,11 @@ def playSpinnerSpinAndStop():
     while current_led != random_stop:
         # Turn off all spinner LEDs
         for j in range(total_spinner_leds):
-            Board_Spinner_pixels[spinner_start_index + j] = (0, 0, 0)
+            Board_pixels[spinner_start_index + j] = (0, 0, 0)
 
         # Light up the current spinner LED
-        Board_Spinner_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
-        Board_Spinner_pixels.write()
+        Board_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
+        Board_pixels.write()
         sleep(delay)
 
         # Move to the next spinner LED
@@ -85,48 +86,48 @@ def playSpinnerSpinAndStop():
 
     # Handle the final spinner stop actions
     for j in range(total_spinner_leds):
-        Board_Spinner_pixels[spinner_start_index + j] = (0, 0, 0)  # Turn off all LEDs
+        Board_pixels[spinner_start_index + j] = (0, 0, 0)  # Turn off all LEDs
 
     # Determine behavior based on the stopping position
     final_led_index = spinner_start_index + random_stop
     if random_stop == 0:
         # Make LED white and return "white"
-        Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
-        Board_Spinner_pixels.write()
+        Board_pixels[final_led_index] = LED_COLORS[random_stop]
+        Board_pixels.write()
         return "white"
     elif random_stop in {1, 4}:
         # Make LED blue and blink 2 times, return 2
         for _ in range(2):
-            Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
-            Board_Spinner_pixels.write()
+            Board_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_pixels.write()
             sleep(0.3)
-            Board_Spinner_pixels[final_led_index] = (0, 0, 0)
-            Board_Spinner_pixels.write()
+            Board_pixels[final_led_index] = (0, 0, 0)
+            Board_pixels.write()
             sleep(0.3)
         return 2
     elif random_stop == 2:
         # Make LED blue and blink 4 times, return 4
         for _ in range(4):
-            Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
-            Board_Spinner_pixels.write()
+            Board_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_pixels.write()
             sleep(0.3)
-            Board_Spinner_pixels[final_led_index] = (0, 0, 0)
-            Board_Spinner_pixels.write()
+            Board_pixels[final_led_index] = (0, 0, 0)
+            Board_pixels.write()
             sleep(0.3)
         return 4
     elif random_stop == 3:
         # Make LED yellow and return "yellow"
-        Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
-        Board_Spinner_pixels.write()
+        Board_pixels[final_led_index] = LED_COLORS[random_stop]
+        Board_pixels.write()
         return "yellow"
     elif random_stop == 5:
         # Make LED blue and blink 3 times, return 3
         for _ in range(3):
-            Board_Spinner_pixels[final_led_index] = LED_COLORS[random_stop]
-            Board_Spinner_pixels.write()
+            Board_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_pixels.write()
             sleep(0.3)
-            Board_Spinner_pixels[final_led_index] = (0, 0, 0)
-            Board_Spinner_pixels.write()
+            Board_pixels[final_led_index] = (0, 0, 0)
+            Board_pixels.write()
             sleep(0.3)
         return 3
 
@@ -279,32 +280,32 @@ def light_up_path(start_node, roll_number):
 
     # Display the reachable spaces with white pixels on the NeoPixels
     for i in range(len(reachable_spaces)):
-        Board_Spinner_pixels[reachable_spaces[i]] = (0, 5, 0)
-    Board_Spinner_pixels.write()  # Update the NeoPixels
+        Board_pixels[reachable_spaces[i]] = (0, 5, 0)
+    Board_pixels.write()  # Update the NeoPixels
 
 # When this function is called, light up all the Yellow spaces.
 # Loop through the yellow_space list and light up that LED
 def light_up_yellow_spaces():
     for yellow_space in yellow_space:
-        Board_Spinner_pixels[yellow_space] = (25, 25, 0)
-    Board_Spinner_pixels.write()
+        Board_pixels[yellow_space] = (25, 25, 0)
+    Board_pixels.write()
 
 # Same as light_up_yellow_spaces() but with the white spaces
 def light_up_white_spaces():
     for white_space in white_space:
-        Board_Spinner_pixels[white_space] = (25, 25, 25)
-    Board_Spinner_pixels.write()
+        Board_pixels[white_space] = (25, 25, 25)
+    Board_pixels.write()
     
 # For the setup process, this function lights up one of the LED positions
 def light_up_position(position):
-    if 0 <= position < len(Board_Spinner_pixels):
+    if 0 <= position < len(Board_pixels):
         # Turn off all LEDs first
-        for i in range(len(Board_Spinner_pixels)):
-            Board_Spinner_pixels[i] = (0, 0, 0)  # RGB values for "off"
+        for i in range(len(Board_pixels)):
+            Board_pixels[i] = (0, 0, 0)  # RGB values for "off"
 
         # Light up the specified position
-        Board_Spinner_pixels[position] = (255, 255, 255)  # RGB values for "white" or a bright color
-        Board_Spinner_pixels.write()  # Function to send data to the LED strip
+        Board_pixels[position] = (255, 255, 255)  # RGB values for "white" or a bright color
+        Board_pixels.write()  # Function to send data to the LED strip
         print(f"Position {position} lit up.")
     else:
         print(f"Error: Position {position} is out of range.")
@@ -331,13 +332,13 @@ def accusationSystem():
 # When the device is turned on, test all of the LEDs on the board
 def StartupProcess():
     # In sequence, from the first LED on the board, to the last LED on the board, then the final 6 LEDs in the spinner.
-    # To do this, in a loop going through all Board_Spinner_pixels, turn on each Board_Spinner_pixels individually, then turn that pixel off.
-    for i in range(len(Board_Spinner_pixels)):
-        Board_Spinner_pixels[i] = (25, 25, 25)
-        Board_Spinner_pixels.write()
+    # To do this, in a loop going through all Board_pixels, turn on each Board_pixels individually, then turn that pixel off.
+    for i in range(len(Board_pixels)):
+        Board_pixels[i] = (25, 25, 25)
+        Board_pixels.write()
         sleep(0.3)
-        Board_Spinner_pixels[i] = (0, 0, 0)
-        Board_Spinner_pixels.write()
+        Board_pixels[i] = (0, 0, 0)
+        Board_pixels.write()
         
     # This comment is a placeholder for other LED tests... TODO
     
@@ -361,11 +362,11 @@ def testFunction():
     if user_input == "1":
         print("Testing board LEDs (5 seconds)...")
         # Light up all board LEDs (dim white)
-        Board_Spinner_pixels.fill((25, 25, 25))
-        Board_Spinner_pixels.write()
+        Board_pixels.fill((25, 25, 25))
+        Board_pixels.write()
         sleep(5)
-        Board_Spinner_pixels.fill((0, 0, 0))
-        Board_Spinner_pixels.write()
+        Board_pixels.fill((0, 0, 0))
+        Board_pixels.write()
         print("Test complete")
         
     elif user_input == "2":
@@ -423,8 +424,8 @@ def testFunction():
         light_up_path(space_number, roll_number)
         #sleep(5)
         input("Press enter to continue")
-        Board_Spinner_pixels.fill((0,0,0))
-        Board_Spinner_pixels.write()
+        Board_pixels.fill((0,0,0))
+        Board_pixels.write()
         print("Test complete")
         
     #Test RFID Functionality    
@@ -465,12 +466,12 @@ def testFunction():
             print("Detected positions:", detected_positions)
 
             # Test LEDs based on detected positions
-            # for i in range(len(Board_Spinner_pixels)):
+            # for i in range(len(Board_pixels)):
             #     if i in detected_positions:
-            #         Board_Spinner_pixels[i] = (0, 255, 0)  # Green for detected positions
+            #         Board_pixels[i] = (0, 255, 0)  # Green for detected positions
             #     else:
-            #         Board_Spinner_pixels[i] = (0, 0, 0)  # Off if not detected
-            # Board_Spinner_pixels.write()
+            #         Board_pixels[i] = (0, 0, 0)  # Off if not detected
+            # Board_pixels.write()
             # sleep(0.1)
 
     elif user_input == "6":
