@@ -43,7 +43,7 @@ def is_spinner_button_pressed():
             if not (value & (1 << pin)):  # Active-low button press (0 means pressed)
                 print(f"Button on PCF8575 {bus_index}, Pin P{pin} is pressed")
 
-# TODO: This function needs to be rewritten since the spinner is not independent
+# TODO: This function needs to be rewritten since the spinner is now independent
 # Randomly generate a number, while also making a spinning animation. Return what the spinner lands on
 def playSpinnerSpinAndStop():
     delay = 0.01  # Starting delay
