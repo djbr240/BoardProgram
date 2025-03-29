@@ -117,30 +117,30 @@ graph = {
 
 #TODO: Change these based on new config (white and yellow spaces and character start spaces and furniture start spaces)
 # Yellow spaces positions
-yellow_space = [0, 4, 23, 29, 32, 36]
+yellow_space = [1, 5, 10, 23, 39, 41]
 
 # White spaces positions
-white_space = [2, 17, 39]
+white_space = [3, 18, 38]
 
 # Start spaces
 # A dictionary where the character and the position is linked together
 character_start_spaces = {
-    "Blue": 30,
-    "Purple": 5,
-    "Red": 1,
-    "Yellow": 12,
-    "Pink" : 40,
-    "Green" : 41
+    "Blue": 0,
+    "Purple": 4,
+    "Red": 30,
+    "Yellow": 40,
+    "Pink" : 24,
+    "Green" : 11
 }
 
 # Furniture spaces
-furniture_start_spaces = {
-    "pooltable": 29,
-    "desk": 4,
-    "chair": 0,
-    "piano": 36,
-    "plant": 32,
-    "diningtable": 23
+furniture_spaces = {
+    "pooltable": 1,
+    "desk": 5,
+    "chair": 41,
+    "piano": 23,
+    "plant": 10,
+    "diningtable": 39
 }
 
 # Dictionary for the character pieces and the RFID links
@@ -198,5 +198,3 @@ cluePanelLED = {
     "4": 1,
     "5": 0
 }
-
-################################################################
