@@ -16,14 +16,6 @@ import random
 from Player import Player
 from config import *
 
-
-# This is the Player class, where all of the information for each player is created
-
-    
-    # End player class
-################################################################
-
-################################################################
 # The following functions are LED animations
 
 # Define LED colors for the sequence on the spinner
@@ -133,16 +125,13 @@ def playSpinnerSpinAndStop():
 
 ################################################################
 
-# This function goes through every channel in the PCF Boards and checks all readings from the Magnet Switches
-# It then returns a list of all the Magnet Switches that detected a magnetic presence
-# This function will need to be called every time the position needs to be updated
-
 def write_port(value):
     data = bytearray([value & 0xFF, (value >> 8) & 0xFF])
     i2c_buses.writeto(PCF8575_ADDRESSES, data)
 
-
-
+# This function goes through every channel in the PCF Boards and checks all readings from the Magnet Switches
+# It then returns a list of all the Magnet Switches that detected a magnetic presence
+# This function will need to be called every time the position needs to be updated
         
 def read_magnet_switches():
     # We have 42 magnet switches across 3 pcf boards
@@ -158,11 +147,6 @@ def read_magnet_switches():
     # After read_pcf() is called, the positions list will be populated with 64 values, we only want the first 42 states
     # So just return the first 42 states
     return positions[:41]
-
-
-# This function takes the previous reading from read_hall_sensors(), calls read_hall_sensors() again and compares them to find the difference from the last reading
-
-    
          
 # Since for MUX3 channels 10-15, we are using those for Potentiometer and Button readings, we need a function to go through those MUX3 Channels
 # We want to have Potentiometer and Buttons separated since they're doing significantly different functions
@@ -173,16 +157,7 @@ def read_magnet_switches():
 # MUX Channel 3 = Panel 4 Potentiometer
 # MUX Channel 4 = Panel 5 Potentiometer
 # MUX Channel 5 = Panel 6 Potentiometer
-# MUX Channel 6 =
-# MUX Channel 7 =
-# MUX Channel 8 =
-# MUX Channel 9 =
-# MUX Channel 10 =
-# MUX Channel 11 =
-# MUX Channel 12 =
-# MUX Channel 13 =
-# MUX Channel 14 =
-# MUX Channel 15 =
+
 def select_mux_channel(mux_pins, channel):
     for i, pin in enumerate(mux_pins):
         pin.value((channel >> i) & 1)  # Set the pin value based on the channel bits
@@ -224,6 +199,19 @@ def readButtons():
     if button6_pressed: buttonPressed = 6
     
     return buttonPressed
+
+# TODO: This hasn't been tested. Not sure if this would work.
+# This function will read the states of the first 6 pins from the fourth PCF board. Return the panel number corresponding to that panel.
+def detectPanels():
+    detectedPanels = []
+    for pin in range(6):
+        # Read the state of the current pin
+        state = read_pcf()[pin + 58]
+        # If the pin is high, it means a panel is present
+        if state:
+            detectedPanels.append(pin + 1)
+            print(f"Panel {pin + 1} detected")
+    return detectedPanels
 
 def readRFID():
     while True:
@@ -528,45 +516,16 @@ def GameSetup():
     based on RFID scans. Players and furniture pieces are linked to their respective start locations.
     """
     players = []  # List to store player objects
-    assigned_rfids = set() # To track processed rfids
+    activePanels = detectPanels() # Obtain the panels that are connected
+    
 
     # Invert dictionaries for easier RFID lookup
     rfid_to_piece = {v: k for k, v in pieceRFID.items()}
     rfid_to_furniture = {v: k for k, v in furnitureRFID.items()}
 
-    print("Waiting for players to press their 'end turn' buttons to assign panels...")
-
-    # Map button presses to panel assignments
-    panel_assignments = {
-        "Button1": Panel1_pixels,
-        "Button2": Panel2_pixels,
-        "Button3": Panel3_pixels,
-        "Button4": Panel4_pixels,
-    }
-
-    # Test code if we don't have buttons
-    # Just pretend that we did get a button press
-    button_pressed = "Button1"
-    panel_pixels = panel_assignments[button_pressed]
-    new_player = Player(position=0, pieceID="")
-    new_player.panel = panel_pixels
-    players.append(new_player)
-    print(f"Player assigned to {button_pressed}.")
+    # This is how player assignments will be set up and assigning that player to their panels
+    players = [Player(i + 1, activePanels[i]) for i in range(len(activePanels))]
     
-    # Wait for players to press their "end turn" buttons and assign panels
-    #assigned_buttons = set()
-    #while len(assigned_buttons) < len(panel_assignments):
-    #    button_pressed = readButtons()  # Replace with your implementation of readButtons
-    #    if button_pressed in panel_assignments and button_pressed not in assigned_buttons:
-    #        print(f"{button_pressed} pressed! Assigning panel...")
-    #        panel_pixels = panel_assignments[button_pressed]
-    #        new_player = Player(position=0, cluesFound=[], pieceID="")
-    #        new_player.panel = panel_pixels
-    #        players.append(new_player)
-    #        assigned_buttons.add(button_pressed)
-    #        print(f"Player assigned to {button_pressed}.")
-    #    elif button_pressed:
-    #        print(f"{button_pressed} already assigned. Waiting for other players...")
 
 
     # Assign character pieces based on RFID scans

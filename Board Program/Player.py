@@ -1,19 +1,20 @@
-#from main import light_up_position
 
 # This is the Player class, where all of the information for each player is created
 class Player:
-    def __init__(self, pieceID, position=0, panel=None):
-        """
-        Initialize a player.
-        :param pieceID: The identifier for the player's piece.
-        :param position: The starting position of the player on the board.
-        :param panel: The LED panel assigned to the player.
-        """
+    def __init__(self, playerNum, panel, pieceID=None, position=None, clues_found=None):
+        '''
+        The following is a list of what information we need about each player:
+        1. Player number -> playerNum, assigned upon creation
+        2. Panel number -> panel, assigned upon creation
+        3. The piece that the player is using -> pieceID, assigned during player's first move (we want the choice of what piece the player uses to be natural)
+        4. Player position -> position, assigned upon player's first move, after discovering assiened pieceID
+        5. List of clues found -> clues_found, initially empty 
+        '''
         self.pieceID = pieceID  # The piece the player is using
         self.position = position  # Tracks the player's current position on the board
         self.clues_found = []  # List of clues collected by the player
         self.panel = panel  # The LED panel assigned to the player
-        self.panel_leds_lit = []  # List of LEDs lit on the panel
+        #self.panel_leds_lit = []  # List of LEDs lit on the panel (I don't think this is needed)
 
     def assign_panel(self, panel):
         """Assign a panel to the player."""
@@ -24,9 +25,6 @@ class Player:
         if self.pieceID is None:  # Piece can only be set once
             self.pieceID = piece
 
-    def collect_clue(self, clue):
-        """Add a clue to the player's collection."""
-        self.clues_found.append(clue)
 
     def add_clue(self, clue):
         """Add a clue (integer) to the player's list of cluesFound and update the panel."""
