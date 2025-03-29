@@ -115,7 +115,6 @@ graph = {
     41: [31]
 }
 
-#TODO: Change these based on new config (white and yellow spaces and character start spaces and furniture start spaces)
 # Yellow spaces positions
 yellow_space = [1, 5, 10, 23, 39, 41]
 
