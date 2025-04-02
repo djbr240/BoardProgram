@@ -164,11 +164,12 @@ def select_mux_channel(mux_pins, channel):
         
 def readPotentiometer():
     # Read MUX3 Channel 15
-    select_mux_channel(MUX_select_pins, 10)
-    adc_value = ADC0_MUX.read_u16()  # Read ADC value
-    return adc_value  # Return the Potentiometer value
+    select_mux_channel(MUX_select_pins, 0)
+    adc_value = ADC0_MUX.read_u16()  # Read ADC 
+    percentage = (adc_value / 65535) * 100 # convert to percent 
+    return int(percentage)  # Return the Potentiometer value in percentage
 
-# Reads MUX3 Channels 10-15 to see if a button is pressed. Return the button number pressed
+# Reads PCF Pins 10-15 to see if a button is pressed. Return the button number pressed
 def readButtons():
     # The buttons are going to be connected to the last 6 pins on the pcf board, so we use read_pcf to get all the states
     # We then remove everything else
@@ -301,9 +302,14 @@ def light_up_position(position):
 # Get the LED position of the clue and light up that LED on the panel
 def light_up_panel_led(clue, panelID):
     ledPos = cluePanelLED.get(clue, None)
+    print(ledPos)
     if ledPos is not None:
         panel[panelID][ledPos] = (255, 255, 255)
         panel[panelID].write()
+
+def turn_off_panel_led(panelID):
+    panel[panelID] = (0, 0, 0)
+    panel[panelID].write()
         
 
 def accusationSystem():
@@ -441,6 +447,12 @@ def testFunction():
                 # Light up panel LED with that clue (we'll just do all the panels I guess..)
                 for i in range(1, len(panel)):
                     light_up_panel_led(item_name, i)
+                    print(f"LED {panel[i]}")
+                sleep(0.1)
+                for i in range(1, len(panel)):
+                   turn_off_panel_led(i)
+                    
+
             # This is for the testing tags and cards. 
             elif card == 17611714:
                 print("Test is Tag 1")
@@ -575,12 +587,22 @@ def main():
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
     while True:
         # Test function
-        testFunction()
+        #testFunction()
+
+        # Define default brightness values
+        PANEL1_BRIGHTNESS = 100
+        PANEL2_BRIGHTNESS = 100
+        PANEL3_BRIGHTNESS = 100
+        PANEL4_BRIGHTNESS = 100
+        PANEL5_BRIGHTNESS = 100
+        PANEL6_BRIGHTNESS = 100
         
         #print(readButtons())
         #sleep(0.5)
 
         #read_pcf()
+
+        print(readPotentiometer())
 
     # Structure of the general gameplay
     # Start game loop
