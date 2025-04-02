@@ -19,7 +19,7 @@ from config import *
 # The following functions are LED animations
 
 # Define LED colors for the sequence on the spinner
-LED_COLORS = {
+SPINNER_LED_COLORS = {
     0: (255, 255, 255),  # White
     1: (0, 0, 255),      # Blue
     2: (0, 0, 255),      # Blue
@@ -51,8 +51,8 @@ def playSpinnerSpinAndStop():
         for j in range(total_spinner_leds):
             Board_pixels[spinner_start_index + j] = (0, 0, 0)
 
-        # Light up the current spinner LED using the color from LED_COLORS
-        Board_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
+        # Light up the current spinner LED using the color from SPINNER_LED_COLORS
+        Board_pixels[spinner_start_index + current_led] = SPINNER_LED_COLORS.get(current_led, (255, 0, 0))  # Default red
         Board_pixels.write()
         sleep(delay)
 
@@ -69,7 +69,7 @@ def playSpinnerSpinAndStop():
             Board_pixels[spinner_start_index + j] = (0, 0, 0)
 
         # Light up the current spinner LED
-        Board_pixels[spinner_start_index + current_led] = LED_COLORS.get(current_led, (255, 0, 0))  # Default red
+        Board_pixels[spinner_start_index + current_led] = SPINNER_LED_COLORS.get(current_led, (255, 0, 0))  # Default red
         Board_pixels.write()
         sleep(delay)
 
@@ -84,13 +84,13 @@ def playSpinnerSpinAndStop():
     final_led_index = spinner_start_index + random_stop
     if random_stop == 0:
         # Make LED white and return "white"
-        Board_pixels[final_led_index] = LED_COLORS[random_stop]
+        Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
         Board_pixels.write()
         return "white"
     elif random_stop in {1, 4}:
         # Make LED blue and blink 2 times, return 2
         for _ in range(2):
-            Board_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
             Board_pixels.write()
             sleep(0.3)
             Board_pixels[final_led_index] = (0, 0, 0)
@@ -100,7 +100,7 @@ def playSpinnerSpinAndStop():
     elif random_stop == 2:
         # Make LED blue and blink 4 times, return 4
         for _ in range(4):
-            Board_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
             Board_pixels.write()
             sleep(0.3)
             Board_pixels[final_led_index] = (0, 0, 0)
@@ -109,13 +109,13 @@ def playSpinnerSpinAndStop():
         return 4
     elif random_stop == 3:
         # Make LED yellow and return "yellow"
-        Board_pixels[final_led_index] = LED_COLORS[random_stop]
+        Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
         Board_pixels.write()
         return "yellow"
     elif random_stop == 5:
         # Make LED blue and blink 3 times, return 3
         for _ in range(3):
-            Board_pixels[final_led_index] = LED_COLORS[random_stop]
+            Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
             Board_pixels.write()
             sleep(0.3)
             Board_pixels[final_led_index] = (0, 0, 0)
@@ -376,8 +376,8 @@ def testFunction():
         if user_input == "1":
             print("Testing panel LEDs...")
             # Light up all panel LEDs
-            Panel1_pixels.fill((25, 25, 25))
-            Panel2_pixels.fill((25, 25, 25))
+            Panel1_pixels.fill((255, 255, 255))
+            Panel2_pixels.fill((255, 255, 255))
             Panel1_pixels.write()
             Panel2_pixels.write()
             sleep(5)
@@ -587,22 +587,14 @@ def main():
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
     while True:
         # Test function
-        #testFunction()
-
-        # Define default brightness values
-        PANEL1_BRIGHTNESS = 100
-        PANEL2_BRIGHTNESS = 100
-        PANEL3_BRIGHTNESS = 100
-        PANEL4_BRIGHTNESS = 100
-        PANEL5_BRIGHTNESS = 100
-        PANEL6_BRIGHTNESS = 100
+        testFunction()
         
         #print(readButtons())
         #sleep(0.5)
 
         #read_pcf()
 
-        print(readPotentiometer())
+        # print(readPotentiometer())
 
     # Structure of the general gameplay
     # Start game loop

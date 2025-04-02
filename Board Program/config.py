@@ -5,6 +5,15 @@ from mfrc522 import MFRC522
 ################################################################
 #   Configuration
 
+# Brightness stuff
+PANEL1_BRIGHTNESS = 100
+
+LED_COLORS = {
+    "Red": (255, 0, 0),
+    "Green": (0, 255, 0),
+    "Blue": (0, 0, 255),
+    "White": (255, 255, 255)
+}
 
 # This is the only place where Pins, number of LEDs, threshold values, etc are defined.
 
