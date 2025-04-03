@@ -14,6 +14,7 @@ from mfrc522 import MFRC522
 from pcf7585 import *
 import random
 from Player import Player
+from Panel import Panel
 from config import *
 
 # The following functions are LED animations
@@ -158,13 +159,15 @@ def read_magnet_switches():
 # MUX Channel 4 = Panel 5 Potentiometer
 # MUX Channel 5 = Panel 6 Potentiometer
 
-def select_mux_channel(mux_pins, channel):
-    for i, pin in enumerate(mux_pins):
-        pin.value((channel >> i) & 1)  # Set the pin value based on the channel bits
+# def select_mux_channel(mux_pins, channel):
+#     for i, pin in enumerate(mux_pins):
+#         pin.value((channel >> i) & 1)  # Set the pin value based on the channel bits
         
-def readPotentiometer():
-    # Read MUX3 Channel 15
-    select_mux_channel(MUX_select_pins, 0)
+def readPotentiometer(panel):
+    # Get potentiometer position from the mux
+    for i, pin in enumerate(MUX_select_pins):
+        pin.value((panel >> i) & 1)  # Set the pin value based on the channel bits
+    
     adc_value = ADC0_MUX.read_u16()  # Read ADC 
     percentage = (adc_value / 65535) * 100 # convert to percent 
     return int(percentage)  # Return the Potentiometer value in percentage
@@ -203,16 +206,16 @@ def readButtons():
 
 # TODO: This hasn't been tested. Not sure if this would work.
 # This function will read the states of the first 6 pins from the fourth PCF board. Return the panel number corresponding to that panel.
-def detectPanels():
-    detectedPanels = []
-    for pin in range(6):
-        # Read the state of the current pin
-        state = read_pcf()[pin + 58]
-        # If the pin is high, it means a panel is present
-        if state:
-            detectedPanels.append(pin + 1)
-            print(f"Panel {pin + 1} detected")
-    return detectedPanels
+# def detectPanels():
+#     detectedPanels = []
+#     for pin in range(6):
+#         # Read the state of the current pin
+#         state = read_pcf()[pin + 58]
+#         # If the pin is high, it means a panel is present
+#         if state:
+#             detectedPanels.append(pin + 1)
+#             print(f"Panel {pin + 1} detected")
+#     return detectedPanels
 
 def readRFID():
     while True:
@@ -300,16 +303,19 @@ def light_up_position(position):
         print(f"Error: Position {position} is out of range.")
 
 # Get the LED position of the clue and light up that LED on the panel
-def light_up_panel_led(clue, panelID):
-    ledPos = cluePanelLED.get(clue, None)
-    print(ledPos)
-    if ledPos is not None:
-        panel[panelID][ledPos] = (255, 255, 255)
-        panel[panelID].write()
+# def light_up_panel_led(clue, panelID):
+#     ledPos = cluePanelLED.get(clue, None)
+#     print(ledPos)
+#     if ledPos is not None:
+#         brightness = readPotentiometer(panelID)
+#         color = LED_COLORS("White")
+#         apply_brightness = tuple(int(c * brightness) for c in color)
+#         panel[panelID][ledPos] = apply_brightness
+#         panel[panelID].write()
 
-def turn_off_panel_led(panelID):
-    panel[panelID] = (0, 0, 0)
-    panel[panelID].write()
+# def turn_off_panel_led(panelID):
+#     panel[panelID] = (0, 0, 0)
+#     panel[panelID].write()
         
 
 def accusationSystem():
@@ -375,21 +381,19 @@ def testFunction():
 
         if user_input == "1":
             print("Testing panel LEDs...")
-            # Light up all panel LEDs
-            Panel1_pixels.fill((255, 255, 255))
-            Panel2_pixels.fill((255, 255, 255))
-            Panel1_pixels.write()
-            Panel2_pixels.write()
-            sleep(5)
-            Panel1_pixels.fill((0, 0, 0))
-            Panel2_pixels.fill((0, 0, 0))
-            Panel1_pixels.write()
-            Panel2_pixels.write()
+            # Use the test function in the panel class to test the panels. Loop through all 6 panels
+            
+            for panelID in panel.keys():
+                panel_instance = Panel(panelID)
+                panel_instance.test_panel()
+            print("Test complete")
 
         if user_input == "2":
-            print("Which panel?")
+            print("Which method? \n1. Text input\n2. RFID")
             if user_input == "1":
                 user_input = input("Input which clue: ")
+                if user_input == "help":
+                        print(f"Here's all the options in the dictionary:\n{cluePanelLED.values()}\n")
                 print(f"Enabling led for clue: {user_input}")
                 # Determine clue from dictionary
                 while True:
@@ -443,14 +447,14 @@ def testFunction():
             item_name = identify_rfid(card, pieceRFID, furnitureRFID)
 
             if item_name:
+                panel_instance = Panel(panel)
                 print(f"Identified {item_name}!")
                 # Light up panel LED with that clue (we'll just do all the panels I guess..)
                 for i in range(1, len(panel)):
-                    light_up_panel_led(item_name, i)
+                    panel.lightLED(item_name, i)
                     print(f"LED {panel[i]}")
-                sleep(0.1)
-                for i in range(1, len(panel)):
-                   turn_off_panel_led(i)
+                    sleep(1)
+                    panel.turn_off(i)
                     
 
             # This is for the testing tags and cards. 
@@ -587,14 +591,14 @@ def main():
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
     while True:
         # Test function
-        testFunction()
+        # testFunction()
         
         #print(readButtons())
         #sleep(0.5)
 
         #read_pcf()
 
-        # print(readPotentiometer())
+        print(readPotentiometer())
 
     # Structure of the general gameplay
     # Start game loop
