@@ -18,7 +18,7 @@ LED_COLORS = {
 # This is the only place where Pins, number of LEDs, threshold values, etc are defined.
 
 # Board LED config
-Board_LED_num_pixels = 25 # 42 Board LEDs and 6 Spinner LEDs = 48
+Board_LED_num_pixels = 42 # 42 Board LEDs
 Board_LED_pin = Pin(22, Pin.OUT)
 Board_pixels = neopixel.NeoPixel(Board_LED_pin, Board_LED_num_pixels)
 
@@ -66,8 +66,8 @@ panel = {
 
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on GP8 and GP9
-    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  
+    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on GP8 and GP9
+    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  
     I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C2 on GP6 and GP7
     I2C(1, scl=Pin(7), sda=Pin(6), freq=400000) 
 ]

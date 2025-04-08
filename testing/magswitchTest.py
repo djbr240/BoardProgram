@@ -3,10 +3,10 @@ import utime
 
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP4 and GP5
-    I2C(0, scl=Pin(5), sda=Pin(4), freq=400000),  # I2C on GP6 and GP7
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP8 and GP7
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000)  # I2C on GP26 and GP27
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP4 and GP5
+    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP6 and GP7
+    # I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C on GP8 and GP7
+    # I2C(1, scl=Pin(7), sda=Pin(6), freq=400000)  # I2C on GP26 and GP27
 
 ]
 
