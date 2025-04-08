@@ -336,7 +336,7 @@ def light_up_path(start_node, roll_number):
 
     # Display the reachable spaces with white pixels on the NeoPixels
     for i in range(len(reachable_spaces)):
-        Board_pixels[reachable_spaces[i]] = (0, 5, 0)
+        Board_pixels[reachable_spaces[i]] = (100, 100, 100)
     Board_pixels.write()  # Update the NeoPixels
 
 # When this function is called, light up all the Yellow spaces.
@@ -380,6 +380,12 @@ def light_up_position(position):
 # def turn_off_panel_led(panelID):
 #     panel[panelID] = (0, 0, 0)
 #     panel[panelID].write()
+
+def getPiecePosition(piece):
+    if piece in character_start_spaces:
+        return character_start_spaces[piece]
+    if piece in furniture_spaces:
+        return furniture_spaces
         
 
 def accusationSystem():
@@ -435,9 +441,9 @@ def testFunction():
         # Light up all board LEDs (dim white)
         Board_pixels.fill((25, 25, 25))
         Board_pixels.write()
-        # sleep(5)
-        # Board_pixels.fill((0, 0, 0))
-        # Board_pixels.write()
+        sleep(5)
+        Board_pixels.fill((0, 0, 0))
+        Board_pixels.write()
         print("Test complete")
         
     elif user_input == "2":
@@ -595,8 +601,37 @@ def GameSetup():
     Sets up the game by assigning players to their panels and initializing their positions 
     based on RFID scans. Players and furniture pieces are linked to their respective start locations.
     """
+
+    # Process that shows the player where every piece goes
+
+    # These are all of the pieces that will need to be placed to start the game
+    all_pieces = [list(pieceRFID.keys())[0], list(furnitureRFID.keys())[0]]
+    scanned_pieces = [] # list to store pieces that were scanned
+
+    # Flash all yellow and white spaces to show that the game is in setup mode
+    for piece in range(len(all_pieces)):
+        while not readRFID:
+            light_up_white_spaces()
+            light_up_yellow_spaces()
+            
+            print("No read")
+        RFIDReading = readRFID()
+        if RFIDReading not in scanned_pieces:
+            scanned_pieces[piece] = RFIDReading # Add reading to the list
+            print(f"{RFIDReading} Registered")
+            Board_pixels[getPiecePosition()]
+        else:
+            print("what the fuck")
+
+        
+
+
+    
+
     players = []  # List to store player objects
-    activePanels = detectPanels() # Obtain the panels that are connected
+    panel_instance = Panel(panel)
+
+    activePanels = len(panel.detectPanels()) # Obtain the panels that are connected
     
 
     # Invert dictionaries for easier RFID lookup
@@ -609,12 +644,6 @@ def GameSetup():
     # This is the loop that will be the game setup
     # We want a system where the players scan a piece on the RFID reader and then the LED for where that piece needs to go will flash
     
-    # These are all of the pieces that will need to be placed to start the game
-    all_pieces = pieceRFID + furnitureRFID
-
-    # Wait for an RFID scan
-    while not readRFID:
-        scanned_piece = readRFID()
     
 
     print("Game setup complete. Players are ready to start!")
@@ -627,15 +656,36 @@ def main():
     # Startup process
     #StartupProcess()
     
+    # Board_pixels.fill(15, 15, 15)
+
     # Game setup
-    #GameSetup()
+    GameSetup()
 
     # Randomize pieces
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
-    while True:
+    # while True:
         # Test function
-        testFunction()
+        # Board_pixels.fill(15, 15, 15)
+        # while True:
+        #     testFunction()
         
+        # while not input():
+        #     print("Enter the space number: ")
+        #     space_number = random.randint(0, 41)
+        #     print("Enter the roll number: ")
+        #     roll_number = random.randint(1, 4)
+            
+        #     print("Lighting path (5 seconds)...")
+        #     light_up_path(space_number, roll_number)
+        #     sleep(1)
+        #     print()
+        #     Board_pixels.fill((0,0,0))
+        #     Board_pixels.write()
+        #     print("Test complete")
+
+        # Board_pixels.fill(0, 0, 0)
+        # break
+
         #print(readButtons())
         #sleep(0.5)
 
