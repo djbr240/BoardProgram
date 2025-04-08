@@ -66,10 +66,11 @@ panel = {
 
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C0 on GP8 and GP9
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000),  # I2C2 on GP6 and GP7
-    I2C(1, scl=Pin(7), sda=Pin(6), freq=400000) 
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP6 and GP7
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  # I2C on GP6 and GP7
+
 ]
 
 # PCF8575 I2C addresses - Note: This is configured using the solder pads on the back of the board (0x20 has none, 0x21 has the +1 pad soldered, and so on)

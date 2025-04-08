@@ -198,6 +198,20 @@ def read_magnet_switches():
     # After read_pcf() is called, the positions list will be populated with 64 values, we only want the first 42 states
     # So just return the first 42 states
     return positions[:41]
+
+def read_pcf():
+    # Initialize the PCF8575 boards
+    #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
+    sensorStates = []
+    for i, (i2c, address) in enumerate(zip(i2c_buses, PCF8575_ADDRESSES)):
+        port_value = read_port(i2c, address)
+        print(f"PCF8575 Board {i} (Address {address:#02x}) Raw Value: {bin(port_value)}")
+
+        for pin in range(16):
+            pin_state = read_pin(i2c, address, pin)
+            sensorStates.append(pin_state)
+            print(f"Board {i} Pin {pin}: {'HIGH' if pin_state else 'LOW'}")
+    return sensorStates
          
 # Since for MUX3 channels 10-15, we are using those for Potentiometer and Button readings, we need a function to go through those MUX3 Channels
 # We want to have Potentiometer and Buttons separated since they're doing significantly different functions
