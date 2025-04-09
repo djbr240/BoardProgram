@@ -44,12 +44,10 @@ PanelLED4_num_pixels = 26
 PanelLED4_pin = Pin(18, Pin.OUT)
 Panel4_pixels = neopixel.NeoPixel(PanelLED4_pin, PanelLED4_num_pixels)
 
-# We currently don't have a solution for having a 5th panel (out of pins)
 PanelLED5_num_pixels = 26
 PanelLED5_pin = Pin(17, Pin.OUT)
 Panel5_pixels = neopixel.NeoPixel(PanelLED5_pin, PanelLED5_num_pixels)
 
-# We currently don't have a solution for having a 6th panel (out of pins)
 PanelLED6_num_pixels = 26
 PanelLED6_pin = Pin(16, Pin.OUT)
 Panel6_pixels = neopixel.NeoPixel(PanelLED6_pin, PanelLED6_num_pixels)
