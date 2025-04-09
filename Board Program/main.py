@@ -413,7 +413,7 @@ def StartupProcess():
     for i in range(len(Board_pixels)):
         Board_pixels[i] = (25, 25, 25)
         Board_pixels.write()
-        sleep(0.3)
+        sleep(0.1)
         Board_pixels[i] = (0, 0, 0)
         Board_pixels.write()
         
