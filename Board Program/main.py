@@ -336,20 +336,20 @@ def light_up_path(start_node, roll_number):
 
     # Display the reachable spaces with white pixels on the NeoPixels
     for i in range(len(reachable_spaces)):
-        Board_pixels[reachable_spaces[i]] = (100, 100, 100)
+        Board_pixels[reachable_spaces[i]] = (255, 255, 255)
     Board_pixels.write()  # Update the NeoPixels
 
 # When this function is called, light up all the Yellow spaces.
 # Loop through the yellow_space list and light up that LED
 def light_up_yellow_spaces():
-    for yellow_space in yellow_space:
-        Board_pixels[yellow_space] = (25, 25, 0)
+    for space in yellow_space:
+        Board_pixels[space] = (255, 255, 0)
     Board_pixels.write()
 
 # Same as light_up_yellow_spaces() but with the white spaces
 def light_up_white_spaces():
-    for white_space in white_space:
-        Board_pixels[white_space] = (25, 25, 25)
+    for space in white_space:
+        Board_pixels[space] = (255, 255, 255)
     Board_pixels.write()
     
 # For the setup process, this function lights up one of the LED positions
@@ -411,9 +411,9 @@ def StartupProcess():
     # In sequence, from the first LED on the board, to the last LED on the board, then the final 6 LEDs in the spinner.
     # To do this, in a loop going through all Board_pixels, turn on each Board_pixels individually, then turn that pixel off.
     for i in range(len(Board_pixels)):
-        Board_pixels[i] = (25, 25, 25)
+        Board_pixels[i] = (255, 255, 255)
         Board_pixels.write()
-        sleep(0.1)
+        sleep(5)
         Board_pixels[i] = (0, 0, 0)
         Board_pixels.write()
         
@@ -547,17 +547,21 @@ def testFunction():
         while True:
             print("Testing Magnet Switches...")
             # Read Magnet Switches and get detected positions
-            detected_positions = read_magnet_switches()
-            print("Detected positions:", detected_positions)
+            detected_raw = read_magnet_switches()
+            print("Detected positions:", detected_raw)
+            # sleep(1)
+            detected_positions = [i for i, val in enumerate(detected_raw) if val == 1]
+            print(detected_positions)
 
             # Test LEDs based on detected positions
-            # for i in range(len(Board_pixels)):
-            #     if i in detected_positions:
-            #         Board_pixels[i] = (0, 255, 0)  # Green for detected positions
-            #     else:
-            #         Board_pixels[i] = (0, 0, 0)  # Off if not detected
-            # Board_pixels.write()
-            # sleep(0.1)
+            for i in range(len(detected_positions)):
+                if i not in detected_positions:
+                    Board_pixels[i] = (0, 255, 0)  # Green for detected positions
+                    Board_pixels.write()
+                else:
+                    Board_pixels[i] = (0, 0, 0)  # Off if not detected
+                    Board_pixels.write()
+            sleep(0.1)
 
     elif user_input == "6":
         print("Waiting for button press to spin...")
@@ -605,26 +609,27 @@ def GameSetup():
     # Process that shows the player where every piece goes
 
     # These are all of the pieces that will need to be placed to start the game
-    all_pieces = [list(pieceRFID.keys())[0], list(furnitureRFID.keys())[0]]
+    all_pieces = list(character_start_spaces.keys()) + list(furniture_spaces.keys())
     scanned_pieces = [] # list to store pieces that were scanned
+    print(all_pieces)
 
     # Flash all yellow and white spaces to show that the game is in setup mode
     for piece in range(len(all_pieces)):
         while not readRFID:
             light_up_white_spaces()
             light_up_yellow_spaces()
-            
             print("No read")
         RFIDReading = readRFID()
         if RFIDReading not in scanned_pieces:
-            scanned_pieces[piece] = RFIDReading # Add reading to the list
+            scanned_pieces.append(RFIDReading) # Add reading to the list
             print(f"{RFIDReading} Registered")
-            Board_pixels[getPiecePosition()]
+            current_piece = all_pieces[piece]
+            Board_pixels[getPiecePosition(current_piece)]
         else:
-            print("what the fuck")
+            print("what the...")
 
         
-
+    return
 
     
 
@@ -654,34 +659,37 @@ def GameSetup():
 
 def main():
     # Startup process
-    #StartupProcess()
+    # StartupProcess()
     
     # Board_pixels.fill(15, 15, 15)
 
     # Game setup
-    GameSetup()
+    # GameSetup()
 
     # Randomize pieces
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
-    # while True:
-        # Test function
-        # Board_pixels.fill(15, 15, 15)
-        # while True:
-        #     testFunction()
+
+    while True:
+    #     #Test function
+    #     # Board_pixels.fill(15, 15, 15)
+    #     # while True:
+        testFunction()
         
-        # while not input():
-        #     print("Enter the space number: ")
-        #     space_number = random.randint(0, 41)
-        #     print("Enter the roll number: ")
-        #     roll_number = random.randint(1, 4)
-            
-        #     print("Lighting path (5 seconds)...")
-        #     light_up_path(space_number, roll_number)
-        #     sleep(1)
-        #     print()
-        #     Board_pixels.fill((0,0,0))
-        #     Board_pixels.write()
-        #     print("Test complete")
+    # while True:
+    #     print("Enter the space number: ")
+    #     space_number = random.randint(0, 41)
+    #     print("Enter the roll number: ")
+    #     roll_number = random.randint(1, 4)
+        
+    #     print("Lighting path (5 seconds)...")
+    #     light_up_path(space_number, roll_number)
+    #     print(f"Space number: {space_number}\nRoll number: {roll_number}")
+    #     # sleep(1)
+    #     # input("Press enter to continue")
+
+
+    #     Board_pixels.fill((0,0,0))
+    #     Board_pixels.write()
 
         # Board_pixels.fill(0, 0, 0)
         # break
