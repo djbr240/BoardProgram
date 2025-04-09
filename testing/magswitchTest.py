@@ -3,10 +3,10 @@ import utime
 
 # Initialize I2C buses for four PCF8575 boards
 i2c_buses = [
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP6 and GP7
-    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  # I2C on GP6 and GP7
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP6 and GP7
+    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  # I2C on GP6 and GP7
 
 ]
 
@@ -39,8 +39,8 @@ def write_pin(i2c, address, pin, value):
     write_port(i2c, address, port_value)
 
 # Initialize all pins to low state on all PCF8575 boards
-for i2c, address in zip(i2c_buses, PCF8575_ADDRESSES):
-    write_port(i2c, address, 0x0000)
+# for i2c, address in zip(i2c_buses, PCF8575_ADDRESSES):
+#     write_port(i2c, address, 0x0000)
 
 # Continuously read and print the pin states of all PCF8575 boards
 while True:
