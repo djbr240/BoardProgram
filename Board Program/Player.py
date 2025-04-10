@@ -14,7 +14,7 @@ class Player:
         self.position = position  # Tracks the player's current position on the board
         self.clues_found = []  # List of clues collected by the player
         self.panel = panel  # The LED panel assigned to the player
-        #self.panel_leds_lit = []  # List of LEDs lit on the panel (I don't think this is needed)
+        self.panel_leds_lit = []  # List of LEDs lit on the panel
 
     def assign_panel(self, panel):
         """Assign a panel to the player."""

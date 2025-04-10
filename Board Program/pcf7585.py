@@ -13,12 +13,6 @@ def read_pin(i2c, address, pin):
     port_value = read_port(i2c, address)
     return (port_value >> pin) & 1
 
-# We need to initialize the pcf boards to a low state or else they're all going to show high states
-def pcf_init():
-    # Initialize all pins to low state on all PCF8575 boards
-    for i2c, address in zip(i2c_buses, PCF8575_ADDRESSES):
-        write_port(i2c, address, 0x0000)
-
 def read_pcf():
     # Initialize the PCF8575 boards
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
