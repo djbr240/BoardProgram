@@ -15,6 +15,7 @@ class Player:
         self.clues_found = []  # List of clues collected by the player
         self.panel = panel  # The LED panel assigned to the player
         self.panel_leds_lit = []  # List of LEDs lit on the panel
+        self.playerNum = playerNum
 
     def assign_panel(self, panel):
         """Assign a panel to the player."""
@@ -65,7 +66,7 @@ class Player:
 
     def display_panel_status(self):
         """Display the status of the player's panel."""
-        print(f"Player {self.pieceID}'s panel LEDs: {self.panel_leds_lit}")
+        print(f"Player {self.playerNum}'s panel LEDs: {self.panel_leds_lit}")
 
     def __str__(self):
-        return f"Player {self.pieceID} is at position {self.position} with clues {self.clues_found}"
+        return f"Player {self.playerNum} is at position {self.position} with clues {self.clues_found}"

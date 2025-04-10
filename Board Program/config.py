@@ -68,7 +68,7 @@ i2c_buses = [
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000), 
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000), 
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000), 
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  
 ]
 
 # PCF8575 I2C addresses - Note: This is configured using the solder pads on the back of the board (0x20 has none, 0x21 has the +1 pad soldered, and so on)

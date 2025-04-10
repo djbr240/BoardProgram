@@ -19,12 +19,12 @@ def read_pcf():
     sensorStates = []
     for i, (i2c, address) in enumerate(zip(i2c_buses, PCF8575_ADDRESSES)):
         port_value = read_port(i2c, address)
-        print(f"PCF8575 Board {i} (Address {address:#02x}) Raw Value: {bin(port_value)}")
+        # print(f"PCF8575 Board {i} (Address {address:#02x}) Raw Value: {bin(port_value)}")
 
         for pin in range(16):
             pin_state = read_pin(i2c, address, pin)
             sensorStates.append(pin_state)
-            print(f"Board {i} Pin {pin}: {'HIGH' if pin_state else 'LOW'}")
+            # print(f"Board {i} Pin {pin}: {'HIGH' if pin_state else 'LOW'}")
     return sensorStates
 
 # Write data to a specific PCF8575

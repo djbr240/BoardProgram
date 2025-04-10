@@ -1,5 +1,5 @@
-from config import *
-from main import *
+# from config import *
+# from main import *
 
 class Panel:
     def __init__(self, panelID):
