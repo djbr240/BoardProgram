@@ -14,11 +14,10 @@ from mfrc522 import MFRC522
 from pcf7585 import *
 import random
 from Player import Player
-from Panel import Panel
+# from Panel import Panel
 from config import *
 
 
-'''
 class Panel:
     def __init__(self, panelID):
         self.panelID = panelID
@@ -54,17 +53,16 @@ class Panel:
 
     # TODO: This hasn't been tested. Not sure if this would work.
     # This function will read the states of the first 6 pins from the fourth PCF board. Return the panel number corresponding to that panel.
-    def detectPanels():
-        detectedPanels = []
-        for pin in range(6):
-            # Read the state of the current pin
-            state = read_pcf()[pin + 58]
-            # If the pin is high, it means a panel is present
-            if state:
-                detectedPanels.append(pin + 1)
-                print(f"Panel {pin + 1} detected")
-        return detectedPanels
-    '''
+def detectPanels():
+    detectedPanels = []
+    for pin in range(6):
+        # Read the state of the current pin
+        state = read_pcf()[pin + 58]
+        # If the pin is high, it means a panel is present
+        if state:
+            detectedPanels.append(pin + 1)
+            print(f"Panel {pin + 1} detected")
+    return detectedPanels
     
 
 # The following functions are LED animations
@@ -81,7 +79,7 @@ SPINNER_LED_COLORS = {
 
 def is_spinner_button_pressed():
     for bus_index, i2c in enumerate(i2c_buses):
-        value = read_pcf(i2c)  # Read GPIO state
+        value = read_pcf()  # Read GPIO state
         for pin in range(16):  # Check each pin (0 to 15)
             if not (value & (1 << pin)):  # Active-low button press (0 means pressed)
                 print(f"Button on PCF8575 {bus_index}, Pin P{pin} is pressed")
@@ -205,12 +203,12 @@ def read_pcf():
     sensorStates = []
     for i, (i2c, address) in enumerate(zip(i2c_buses, PCF8575_ADDRESSES)):
         port_value = read_port(i2c, address)
-        print(f"PCF8575 Board {i} (Address {address:#02x}) Raw Value: {bin(port_value)}")
+        # print(f"PCF8575 Board {i} (Address {address:#02x}) Raw Value: {bin(port_value)}")
 
         for pin in range(16):
             pin_state = read_pin(i2c, address, pin)
             sensorStates.append(pin_state)
-            print(f"Board {i} Pin {pin}: {'HIGH' if pin_state else 'LOW'}")
+            # print(f"Board {i} Pin {pin}: {'HIGH' if pin_state else 'LOW'}")
     return sensorStates
          
 # Since for MUX3 channels 10-15, we are using those for Potentiometer and Button readings, we need a function to go through those MUX3 Channels
@@ -267,19 +265,6 @@ def readButtons():
     if button6_pressed: buttonPressed = 6
     
     return buttonPressed
-
-# TODO: This hasn't been tested. Not sure if this would work.
-# This function will read the states of the first 6 pins from the fourth PCF board. Return the panel number corresponding to that panel.
-# def detectPanels():
-#     detectedPanels = []
-#     for pin in range(6):
-#         # Read the state of the current pin
-#         state = read_pcf()[pin + 58]
-#         # If the pin is high, it means a panel is present
-#         if state:
-#             detectedPanels.append(pin + 1)
-#             print(f"Panel {pin + 1} detected")
-#     return detectedPanels
 
 def readRFID():
     while True:
@@ -413,7 +398,7 @@ def StartupProcess():
     for i in range(len(Board_pixels)):
         Board_pixels[i] = (255, 255, 255)
         Board_pixels.write()
-        sleep(5)
+        sleep(.1)
         Board_pixels[i] = (0, 0, 0)
         Board_pixels.write()
         
@@ -622,53 +607,51 @@ def GameSetup():
     # Loop until all required pieces and furniture are placed
     while placed_characters != required_characters or placed_furniture != required_furniture:
         print("Scan a piece...")
-        (stat, tag_type) = RFIDreader.request(RFIDreader.REQIDL)
+        
+        # Use the custom readRFID function to read the RFID tag
+        rfid = readRFID()
+        print(f"Scanned RFID: {rfid}")
 
-        if stat == RFIDreader.OK:
-            (stat, uid) = RFIDreader.anticoll()
-            if stat == RFIDreader.OK:
-                rfid = int.from_bytes(bytes(uid), 'big')
-                print(f"Scanned RFID: {rfid}")
+        if rfid in rfid_to_character:
+            name = rfid_to_character[rfid]
+            position = character_start_spaces[name]
+            print(f"{name} character detected. Should be at space {position}")
+            Board_pixels[position] = LED_COLORS["White"]
+            Board_pixels.write()
 
-                if rfid in rfid_to_character:
-                    name = rfid_to_character[rfid]
-                    position = character_start_spaces[name]
-                    print(f"{name} character detected. Should be at space {position}")
-                    Board_pixels[position] = LED_COLORS[name]
-                    Board_pixels.write()
+            # position = read_pcf()
+            print(position)
+            if not read_magnet_switches() == position:
+                placed_characters.add(rfid)
+                print(f"{name} correctly placed.")
+            else:
+                print(f"{name} not yet placed correctly.")
 
-                    if read_pin(i2c_buses[position // 16], PCF8575_ADDRESSES[position // 16], position % 16) == 0:
-                        placed_characters.add(rfid)
-                        print(f"{name} correctly placed.")
-                    else:
-                        print(f"{name} not yet placed correctly.")
+        elif rfid in rfid_to_furniture:
+            name = rfid_to_furniture[rfid]
+            position = furniture_spaces[name]
+            print(f"{name} furniture detected. Should be at space {position}")
+            Board_pixels[position] = LED_COLORS["White"]
+            Board_pixels.write()
 
-                elif rfid in rfid_to_furniture:
-                    name = rfid_to_furniture[rfid]
-                    position = furniture_spaces[name]
-                    print(f"{name} furniture detected. Should be at space {position}")
-                    Board_pixels[position] = LED_COLORS["White"]
-                    Board_pixels.write()
+            if not read_magnet_switches() == position:
+                placed_furniture.add(rfid)
+                print(f"{name} correctly placed.")
+            else:
+                print(f"{name} not yet placed correctly.")
 
-                    if read_pin(i2c_buses[position // 16], PCF8575_ADDRESSES[position // 16], position % 16) == 0:
-                        placed_furniture.add(rfid)
-                        print(f"{name} correctly placed.")
-                    else:
-                        print(f"{name} not yet placed correctly.")
-
-                else:
-                    print("Unknown piece scanned.")
+        else:
+            print("Unknown piece scanned.")
 
         utime.sleep(0.2)
 
     print("All pieces placed correctly!")
 
     # Detect plugged-in panels using Panel.detectPanels
-    detected_panels = Panel.detectPanels()
+    detected_panels = detectPanels()
 
     players = []
     for idx, panel_id in enumerate(detected_panels):
-        #panel_instance = Panel(panel_id)
         player = Player(playerNum=len(players) + 1, panel=Panel(panel_id))
         players.append(player)
         print(f"Player {player.playerNum} assigned to Panel {panel_id}")
@@ -676,76 +659,13 @@ def GameSetup():
     print("Game setup complete. Players ready!")
     return players
 
-    '''
-    # Process that shows the player where every piece goes
-
-    # These are all of the pieces that will need to be placed to start the game
-    all_pieces = list(character_start_spaces.keys()) + list(furniture_spaces.keys())
-    scanned_pieces = [] # list to store pieces that were scanned
-    print(all_pieces)
-
-    # Flash all yellow and white spaces to show that the game is in setup mode
-    for piece in range(len(all_pieces)):
-        while not readRFID:
-            light_up_white_spaces()
-            light_up_yellow_spaces()
-            print("No read")
-        RFIDReading = readRFID()
-        if RFIDReading not in scanned_pieces:
-            scanned_pieces.append(RFIDReading) # Add reading to the list
-            print(f"{RFIDReading} Registered")
-            current_piece = all_pieces[piece]
-            Board_pixels[getPiecePosition(current_piece)]
-        else:
-            print("what the...")
-
-        
-    return
-
-    
-
-    players = []  # List to store player objects
-    panel_instance = Panel(panel)
-
-    activePanels = len(panel.detectPanels()) # Obtain the panels that are connected
-    
-
-    # Invert dictionaries for easier RFID lookup
-    rfid_to_piece = {v: k for k, v in pieceRFID.items()}
-    rfid_to_furniture = {v: k for k, v in furnitureRFID.items()}
-
-    # This is how player assignments will be set up and assigning that player to their panels
-    players = [Player(i + 1, activePanels[i]) for i in range(len(activePanels))]
-    
-    # This is the loop that will be the game setup
-    # We want a system where the players scan a piece on the RFID reader and then the LED for where that piece needs to go will flash
-    
-    
-
-    print("Game setup complete. Players are ready to start!")
-    return players
-    '''
-
 
 # Begin main function
 
 def main():
-    # Startup process
-    # StartupProcess()
-    
-    # Board_pixels.fill(15, 15, 15)
-
-    # Game setup
-    # GameSetup()
-
-    # Randomize pieces
-    #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
-
     # while True:
-    #     #Test function
-    #     # Board_pixels.fill(15, 15, 15)
-    #     # while True:
-        # testFunction()
+    # #Test function
+    #     testFunction()
         
     # while True:
     #     print("Enter the space number: ")
@@ -790,6 +710,11 @@ def main():
     #    - Create Player instances and assign them panels
     players = GameSetup()
 
+    Board_pixels[i] = (0, 0, 0)
+    Board_pixels.write()
+
+    StartupProcess()
+
     # 4. Setup is complete, print a summary
     print(f"{len(players)} player(s) have joined the game.")
     for player in players:
@@ -802,7 +727,7 @@ def main():
 
         # Get player turn
         for player in players:
-            print(f"Player {player.pieceID}'s turn")
+            print(f"Player {player.playerNum}'s turn")
             
             # Wait for player to press spinner button
             while not is_spinner_button_pressed():
@@ -826,10 +751,10 @@ def main():
                 player.update_panel()
 
                 # If player presses accusation button, call accusation function
-                if is_accusation_button_pressed():
-                    accusationResult = accusationSystem()
+                if readRFID:
+                    accusationResult = accusationSystem(readRFID)
                     if accusationResult != 0:
-                        print("Game Over! Player made an accusation.")
+                        print("Game Over! Player made a correct accusation.")
                         break  # Exit game loop if accusation is made
                 else:
                     # Move onto next turn
