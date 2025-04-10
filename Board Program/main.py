@@ -14,11 +14,11 @@ from mfrc522 import MFRC522
 from pcf7585 import *
 import random
 from Player import Player
-# from Panel import Panel
+from Panel import Panel
 from config import *
 
 
-
+'''
 class Panel:
     def __init__(self, panelID):
         self.panelID = panelID
@@ -64,7 +64,7 @@ class Panel:
                 detectedPanels.append(pin + 1)
                 print(f"Panel {pin + 1} detected")
         return detectedPanels
-    
+    '''
     
 
 # The following functions are LED animations
@@ -294,7 +294,7 @@ def readRFID():
                 return card
                 break
 
-def identify_rfid(card, pieceRFID, furnitureRFID):
+def identify_rfid(card):
     # Check character pieces
     for name, rfid_value in pieceRFID.items():
         if card == rfid_value:
@@ -514,7 +514,7 @@ def testFunction():
 
             
             # Fetch the corresponding piece and furniture from the dictionary
-            item_name = identify_rfid(card, pieceRFID, furnitureRFID)
+            item_name = identify_rfid(card)
 
             if item_name:
                 panel_instance = Panel(panel)
@@ -606,6 +606,77 @@ def GameSetup():
     based on RFID scans. Players and furniture pieces are linked to their respective start locations.
     """
 
+    print("Starting game setup...")
+
+    # Store the required pieces and furniture
+    required_characters = set(pieceRFID.values())
+    required_furniture = set(furnitureRFID.values())
+
+    placed_characters = set()
+    placed_furniture = set()
+
+    # Invert the RFID mappings to look up piece/furniture by scanned RFID
+    rfid_to_character = {v: k for k, v in pieceRFID.items()}
+    rfid_to_furniture = {v: k for k, v in furnitureRFID.items()}
+
+    # Loop until all required pieces and furniture are placed
+    while placed_characters != required_characters or placed_furniture != required_furniture:
+        print("Scan a piece...")
+        (stat, tag_type) = RFIDreader.request(RFIDreader.REQIDL)
+
+        if stat == RFIDreader.OK:
+            (stat, uid) = RFIDreader.anticoll()
+            if stat == RFIDreader.OK:
+                rfid = int.from_bytes(bytes(uid), 'big')
+                print(f"Scanned RFID: {rfid}")
+
+                if rfid in rfid_to_character:
+                    name = rfid_to_character[rfid]
+                    position = character_start_spaces[name]
+                    print(f"{name} character detected. Should be at space {position}")
+                    Board_pixels[position] = LED_COLORS[name]
+                    Board_pixels.write()
+
+                    if read_pin(i2c_buses[position // 16], PCF8575_ADDRESSES[position // 16], position % 16) == 0:
+                        placed_characters.add(rfid)
+                        print(f"{name} correctly placed.")
+                    else:
+                        print(f"{name} not yet placed correctly.")
+
+                elif rfid in rfid_to_furniture:
+                    name = rfid_to_furniture[rfid]
+                    position = furniture_spaces[name]
+                    print(f"{name} furniture detected. Should be at space {position}")
+                    Board_pixels[position] = LED_COLORS["White"]
+                    Board_pixels.write()
+
+                    if read_pin(i2c_buses[position // 16], PCF8575_ADDRESSES[position // 16], position % 16) == 0:
+                        placed_furniture.add(rfid)
+                        print(f"{name} correctly placed.")
+                    else:
+                        print(f"{name} not yet placed correctly.")
+
+                else:
+                    print("Unknown piece scanned.")
+
+        utime.sleep(0.2)
+
+    print("All pieces placed correctly!")
+
+    # Detect plugged-in panels using Panel.detectPanels
+    detected_panels = Panel.detectPanels()
+
+    players = []
+    for idx, panel_id in enumerate(detected_panels):
+        #panel_instance = Panel(panel_id)
+        player = Player(playerNum=len(players) + 1, panel=Panel(panel_id))
+        players.append(player)
+        print(f"Player {player.playerNum} assigned to Panel {panel_id}")
+
+    print("Game setup complete. Players ready!")
+    return players
+
+    '''
     # Process that shows the player where every piece goes
 
     # These are all of the pieces that will need to be placed to start the game
@@ -653,6 +724,7 @@ def GameSetup():
 
     print("Game setup complete. Players are ready to start!")
     return players
+    '''
 
 
 # Begin main function
@@ -669,11 +741,11 @@ def main():
     # Randomize pieces
     #write_port(i2c_buses, PCF8575_ADDRESSES, 0x0000)
 
-    while True:
+    # while True:
     #     #Test function
     #     # Board_pixels.fill(15, 15, 15)
     #     # while True:
-        testFunction()
+        # testFunction()
         
     # while True:
     #     print("Enter the space number: ")
@@ -700,6 +772,175 @@ def main():
         #read_pcf()
 
         #print(readPotentiometer())
+        
+    ##############################################################
+    
+    
+    # Main gameplay loop (needs testing)
+    print("Initializing game hardware...")
+
+    # 2. Initialize NeoPixel LED board to all off.
+    for i in range(len(Board_pixels)):
+        Board_pixels[i] = (0, 0, 0)
+    Board_pixels.write()
+
+    # 3. Call GameSetup to:
+    #    - Wait for all character and furniture pieces to be placed correctly
+    #    - Automatically detect which panels are plugged in
+    #    - Create Player instances and assign them panels
+    players = GameSetup()
+
+    # 4. Setup is complete, print a summary
+    print(f"{len(players)} player(s) have joined the game.")
+    for player in players:
+        print(player)
+
+    # 5. Structure of the general gameplay
+    print("Starting game loop...")
+    while True:
+        # Start game loop
+
+        # Get player turn
+        for player in players:
+            print(f"Player {player.pieceID}'s turn")
+            
+            # Wait for player to press spinner button
+            while not is_spinner_button_pressed():
+                utime.sleep(0.1)  # Wait for button press
+
+            # If the spinner button is pressed, get the spinner value
+            spinValue = playSpinnerSpinAndStop()
+            print(f"Spin Value: {spinValue}")
+
+            # If spinValue is "yellow"
+            if spinValue == "yellow":
+                # Light up all yellow spaces
+                light_up_yellow_spaces()
+                # Wait for RFID scan
+                rfid = readRFID()
+                print(f"RFID Scan Result: {rfid}")
+
+                # Get clue based on RFID scan
+                clue = identify_rfid(rfid)
+                player.add_clue(clue)
+                player.update_panel()
+
+                # If player presses accusation button, call accusation function
+                if is_accusation_button_pressed():
+                    accusationResult = accusationSystem()
+                    if accusationResult != 0:
+                        print("Game Over! Player made an accusation.")
+                        break  # Exit game loop if accusation is made
+                else:
+                    # Move onto next turn
+                    continue
+
+            # If spinValue is "white"
+            elif spinValue == "white":
+                # Light up all white spaces
+                light_up_white_spaces()
+                # Wait for RFID scan
+                rfid = readRFID()
+                print(f"RFID Scan Result: {rfid}")
+
+                # Validate the RFID scan, make sure it's a white piece
+                if not is_valid_white_piece(rfid):
+                    print("Error: Incorrect piece scanned (should be white).")
+                    continue
+
+                # Update player's panel
+                clue = get_clue_from_rfid(rfid)
+                player.add_clue(clue)
+                player.update_panel()
+
+                # If player presses accusation button, call accusation function
+                if is_accusation_button_pressed():
+                    accusationResult = accusationSystem()
+                    if accusationResult != 0:
+                        print("Game Over! Player made an accusation.")
+                        break  # Exit game loop if accusation is made
+                else:
+                    # Move onto next turn
+                    continue
+
+            # If spinValue is a number (i.e., a number between 1 and 6)
+            elif isinstance(spinValue, int):
+                # Get number from the spinner result
+                print(f"Moving {spinValue} spaces.")
+                # Call lightuppath function passing it the spinner value
+                light_up_path(spinValue)
+
+                # Check where player lands after moving
+                if player.position in yellow_space:
+                    # Wait for RFID scan
+                    rfid = readRFID()
+                    print(f"RFID Scan Result: {rfid}")
+
+                    # Make sure it's a yellow piece
+                    if not is_valid_yellow_piece(rfid):
+                        print("Error: Incorrect piece scanned (should be yellow).")
+                        continue
+
+                    # Update player's panel
+                    clue = identify_rfid(rfid)
+                    player.add_clue(clue)
+                    player.update_panel()
+
+                    # If player presses accusation button, call accusation function
+                    if is_accusation_button_pressed():
+                        accusationResult = accusationSystem()
+                        if accusationResult != 0:
+                            print("Game Over! Player made an accusation.")
+                            break  # Exit game loop if accusation is made
+                    else:
+                        # Move onto next turn
+                        continue
+
+                elif player.position in white_space:
+                    # Wait for RFID scan
+                    rfid = readRFID()
+                    print(f"RFID Scan Result: {rfid}")
+
+                    # Make sure it's a white piece
+                    if not is_valid_white_piece(rfid):
+                        print("Error: Incorrect piece scanned (should be white).")
+                        continue
+
+                    # Update player's panel
+                    clue = get_clue_from_rfid(rfid)
+                    player.add_clue(clue)
+                    player.update_panel()
+
+                    # If player presses accusation button, call accusation function
+                    if is_accusation_button_pressed():
+                        accusationResult = accusationSystem()
+                        if accusationResult != 0:
+                            print("Game Over! Player made an accusation.")
+                            break  # Exit game loop if accusation is made
+                    else:
+                        # Move onto next turn
+                        continue
+
+                else:
+                    # If player lands on a non-yellow/non-white space, wait for accusation button or end turn button press
+                    if is_accusation_button_pressed():
+                        accusationResult = accusationSystem()
+                        if accusationResult != 0:
+                            print("Game Over! Player made an accusation.")
+                            break  # Exit game loop if accusation is made
+                    else:
+                        # End player's turn and proceed
+                        print("End of turn.")
+                        continue
+
+            # Check if player presses the accusation button at any time during their turn
+            if is_accusation_button_pressed():
+                accusationResult = accusationSystem()
+                if accusationResult != 0:
+                    print("Game Over! Player made an accusation.")
+                    break  # Exit game loop if accusation is made
+    
+    ##############################################################
 
     # Structure of the general gameplay
     # Start game loop
