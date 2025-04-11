@@ -35,7 +35,6 @@ class Player:
     def move(self, new_position):
         """Update the player's position."""
         self.position = new_position
-        self.update_panel()  # Light up the new position on the panel
 
     def update_position(self, new_position=None):
         """
@@ -46,21 +45,18 @@ class Player:
             self.position = new_position
         else:
             print("Error: No new position provided.")
-        
-        self.update_panel()  # Update the LED panel after moving
 
     def get_position(self):
         """Get the player's current position."""
         return self.position
 
     def update_panel(self):
-        """Update the player's panel by lighting up the player's current position."""
+    # Update the player's panel by lighting up LEDs corresponding to found clues.
         if self.panel is not None:
-            # Ensure we only light up the player's position on the panel
-            if self.position not in self.panel_leds_lit:
-                self.panel_leds_lit.append(self.position)
-                # Light up the position on the panel
-                self.panel.lightLED(self.position)
+            for clue in self.clues_found:
+                if clue not in self.panel_leds_lit:
+                    self.panel_leds_lit.append(clue)
+                    self.panel.lightLED(clue)  # Light up clue index on the panel
         else:
             print("No panel assigned to this player.")
 

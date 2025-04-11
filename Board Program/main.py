@@ -16,7 +16,7 @@ import random
 from Player import Player
 # from Panel import Panel
 from config import *
-
+from _thread import start_new_thread
 
 class Panel:
     def __init__(self, panelID):
@@ -51,6 +51,12 @@ class Panel:
         panel[panelID] = (0, 0, 0)
         panel[panelID].write()
 
+    def _apply_brightness(self):
+        """Reapply brightness scaling to all lit LEDs."""
+        for i, base_color in enumerate(self.led_colors):
+            self.strip[i] = self._scale_color(base_color)
+        self.strip.write()
+
     # TODO: This hasn't been tested. Not sure if this would work.
     # This function will read the states of the first 6 pins from the fourth PCF board. Return the panel number corresponding to that panel.
 def detectPanels():
@@ -63,6 +69,23 @@ def detectPanels():
             detectedPanels.append(pin + 1)
             print(f"Panel {pin + 1} detected")
     return detectedPanels
+
+pot_values = {}  # Global or shared dictionary to store readings
+
+def pot_reader_loop():
+    """Runs on Core 1: reads potentiometers & updates brightness for each panel."""
+    while True:
+        for panel in range(6):  # Assuming panels is a list of 6 Panel objects
+            panel_num = panel.panel_num  # Each panel knows its MUX channel
+            # Set MUX select lines
+            for i, pin in enumerate(MUX_select_pins):
+                pin.value((panel_num >> i) & 1)
+            
+            adc_value = ADC0_MUX.read_u16()
+            brightness = int((adc_value / 65535) * 100)
+            panel.set_brightness(brightness)
+
+        sleep(0.1)  # Prevent hammering the MUX
     
 
 # The following functions are LED animations
@@ -78,13 +101,26 @@ SPINNER_LED_COLORS = {
 }
 
 def is_spinner_button_pressed():
-    for bus_index, i2c in enumerate(i2c_buses):
-        value = read_pcf()  # Read GPIO state
-        for pin in range(16):  # Check each pin (0 to 15)
-            if not (value & (1 << pin)):  # Active-low button press (0 means pressed)
-                print(f"Button on PCF8575 {bus_index}, Pin P{pin} is pressed")
+    pin_state = read_pin(i2c_buses[2], 0x23, 8) # PCF board 4 pin 8
+    print(pin_state)
+    if pin_state == 0:
+        print("Pressed")
+        return True
 
-# TODO: This function needs to be rewritten since the spinner is now independent
+def set_turn_light(player_index):
+    """
+    Lights the turn indicator for the given player's panel.
+    Only one turn light is active at a time (on PCF board 3, pins 10-15).
+    """
+    base_pin = 10  # PCF 3 pins 10–15 are used
+    for i in range(6):
+        pin_num = base_pin + i
+        if i == player_index:
+            write_pin(i2c_buses, 0x23, pin_num, 1)  # Turn ON
+        else:
+            write_pin(i2c_buses, 0x23, pin_num, 0)  # Turn OFF
+
+
 # Randomly generate a number, while also making a spinning animation. Return what the spinner lands on
 def playSpinnerSpinAndStop():
     delay = 0.01  # Starting delay
@@ -241,7 +277,6 @@ def readButtons():
 
     values = []
 
-    pcf_init()
     values = read_pcf()  # Read GPIO state from PCF8575
     #print(values)
     # Remove the non-button states
@@ -373,7 +408,7 @@ def getPiecePosition(piece):
         return furniture_spaces
         
 
-def accusationSystem():
+def accusationSystem(furniture_assignment, character_assignment):
     # TODO
 
     # General structure of the accusation system
@@ -391,21 +426,8 @@ def accusationSystem():
 
     print("Accusation System functional called...")
         
-# When the device is turned on, test all of the LEDs on the board
-def StartupProcess():
-    # In sequence, from the first LED on the board, to the last LED on the board, then the final 6 LEDs in the spinner.
-    # To do this, in a loop going through all Board_pixels, turn on each Board_pixels individually, then turn that pixel off.
-    for i in range(len(Board_pixels)):
-        Board_pixels[i] = (255, 255, 255)
-        Board_pixels.write()
-        sleep(.1)
-        Board_pixels[i] = (0, 0, 0)
-        Board_pixels.write()
-        
-    # This comment is a placeholder for other LED tests... TODO
-    
-        
-# Function to help everyone test out the program with hardware
+
+
 def testFunction():
     # Print options for the user
     print("Clueless board options:")
@@ -584,6 +606,38 @@ def testFunction():
 
 ########################################################################
 
+# When the device is turned on, test all of the LEDs on the board
+def StartupProcess():
+    # In sequence, from the first LED on the board, to the last LED on the board, then the final 6 LEDs in the spinner.
+    # To do this, in a loop going through all Board_pixels, turn on each Board_pixels individually, then turn that pixel off.
+    for i in range(len(Board_pixels)):
+        Board_pixels[i] = (255, 255, 255)
+        Board_pixels.write()
+        sleep(.1)
+        Board_pixels[i] = (0, 0, 0)
+        Board_pixels.write()
+        
+    # This comment is a placeholder for other LED tests... TODO
+
+def shuffle(list):
+    for i in range(len(list) - 1, 0, -1):
+        j = random.randint(0, i)
+        list[i], list[j] = list[j], list[i]
+
+
+def randomizeClues():
+    # Step 1: Shuffle toy clues and assign to characters
+    shuffle(toy_clues)
+    character_pairs = list(zip(character_clues, toy_clues))  # [(character, toy)]
+    print(character_pairs)
+
+    # Step 2: Shuffle time clues and assign to furniture (must match in count!)
+    shuffle(time_clues)
+    furniture_pairs = list(zip(furniture_clues, time_clues[:len(furniture_clues)]))  # [(furniture, time)]
+    print(furniture_pairs)
+
+    return character_pairs, furniture_pairs
+
 # Setup process
 def GameSetup():
     """
@@ -665,50 +719,36 @@ def GameSetup():
 def main():
     # while True:
     # #Test function
-    #     testFunction()
-        
-    # while True:
-    #     print("Enter the space number: ")
-    #     space_number = random.randint(0, 41)
-    #     print("Enter the roll number: ")
-    #     roll_number = random.randint(1, 4)
-        
-    #     print("Lighting path (5 seconds)...")
-    #     light_up_path(space_number, roll_number)
-    #     print(f"Space number: {space_number}\nRoll number: {roll_number}")
-    #     # sleep(1)
-    #     # input("Press enter to continue")
-
-
-    #     Board_pixels.fill((0,0,0))
-    #     Board_pixels.write()
-
-        # Board_pixels.fill(0, 0, 0)
-        # break
-
-        #print(readButtons())
-        #sleep(0.5)
-
-        #read_pcf()
-
-        #print(readPotentiometer())
+    #     # print(is_spinner_button_pressed())
+    #     # testFunction()
+    #     character_assignments, furniture_assignments = randomizeClues()
+    #     print(character_assignments)
+    #     print(furniture_assignments)
+    #     sleep(10)
         
     ##############################################################
+    
+    # Always loop checking the pot reading
+    start_new_thread(pot_reader_loop, ())
+
     
     
     # Main gameplay loop (needs testing)
     print("Initializing game hardware...")
 
     # 2. Initialize NeoPixel LED board to all off.
-    for i in range(len(Board_pixels)):
-        Board_pixels[i] = (0, 0, 0)
-    Board_pixels.write()
+    # for i in range(len(Board_pixels)):
+    #     Board_pixels[i] = (0, 0, 0)
+    # Board_pixels.write()
 
     # 3. Call GameSetup to:
     #    - Wait for all character and furniture pieces to be placed correctly
     #    - Automatically detect which panels are plugged in
     #    - Create Player instances and assign them panels
     players = GameSetup()
+
+    # Randomize clues
+    character_assignments, furniture_assignments = randomizeClues()
 
     Board_pixels[i] = (0, 0, 0)
     Board_pixels.write()
@@ -752,7 +792,7 @@ def main():
 
                 # If player presses accusation button, call accusation function
                 if readRFID:
-                    accusationResult = accusationSystem(readRFID)
+                    accusationResult = accusationSystem(readRFID())
                     if accusationResult != 0:
                         print("Game Over! Player made a correct accusation.")
                         break  # Exit game loop if accusation is made
@@ -769,17 +809,17 @@ def main():
                 print(f"RFID Scan Result: {rfid}")
 
                 # Validate the RFID scan, make sure it's a white piece
-                if not is_valid_white_piece(rfid):
+                if rfid not in pieceRFID.values():
                     print("Error: Incorrect piece scanned (should be white).")
                     continue
 
                 # Update player's panel
-                clue = get_clue_from_rfid(rfid)
+                clue = identify_rfid(rfid)
                 player.add_clue(clue)
                 player.update_panel()
 
                 # If player presses accusation button, call accusation function
-                if is_accusation_button_pressed():
+                if readRFID():
                     accusationResult = accusationSystem()
                     if accusationResult != 0:
                         print("Game Over! Player made an accusation.")
@@ -802,8 +842,11 @@ def main():
                     print(f"RFID Scan Result: {rfid}")
 
                     # Make sure it's a yellow piece
-                    if not is_valid_yellow_piece(rfid):
+                    if rfid not in furnitureRFID.values():
                         print("Error: Incorrect piece scanned (should be yellow).")
+                        for i in range(3):
+                            light_up_yellow_spaces()
+                            Board_pixels = (0, 0, 0)
                         continue
 
                     # Update player's panel
@@ -811,8 +854,8 @@ def main():
                     player.add_clue(clue)
                     player.update_panel()
 
-                    # If player presses accusation button, call accusation function
-                    if is_accusation_button_pressed():
+                    # If player presses scans a piece, call accusation function
+                    if readRFID():
                         accusationResult = accusationSystem()
                         if accusationResult != 0:
                             print("Game Over! Player made an accusation.")
@@ -827,17 +870,17 @@ def main():
                     print(f"RFID Scan Result: {rfid}")
 
                     # Make sure it's a white piece
-                    if not is_valid_white_piece(rfid):
+                    if rfid not in pieceRFID:
                         print("Error: Incorrect piece scanned (should be white).")
                         continue
 
                     # Update player's panel
-                    clue = get_clue_from_rfid(rfid)
+                    clue = identify_rfid(rfid)
                     player.add_clue(clue)
                     player.update_panel()
 
                     # If player presses accusation button, call accusation function
-                    if is_accusation_button_pressed():
+                    if readRFID():
                         accusationResult = accusationSystem()
                         if accusationResult != 0:
                             print("Game Over! Player made an accusation.")
@@ -848,8 +891,8 @@ def main():
 
                 else:
                     # If player lands on a non-yellow/non-white space, wait for accusation button or end turn button press
-                    if is_accusation_button_pressed():
-                        accusationResult = accusationSystem()
+                    if readRFID():
+                        accusationResult = accusationSystem(furniture_assignments, character_assignments)
                         if accusationResult != 0:
                             print("Game Over! Player made an accusation.")
                             break  # Exit game loop if accusation is made
@@ -857,13 +900,6 @@ def main():
                         # End player's turn and proceed
                         print("End of turn.")
                         continue
-
-            # Check if player presses the accusation button at any time during their turn
-            if is_accusation_button_pressed():
-                accusationResult = accusationSystem()
-                if accusationResult != 0:
-                    print("Game Over! Player made an accusation.")
-                    break  # Exit game loop if accusation is made
     
     ##############################################################
 
