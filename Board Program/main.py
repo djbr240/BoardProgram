@@ -22,34 +22,37 @@ class Panel:
     def __init__(self, panelID):
         self.panelID = panelID
 
-    def lightLED(clue, panelID):
-        ledPos = cluePanelLED.get(clue, None)
+    def lightLED(self, clue, panelID):
+        ledPos = cluePanelLED.get(clue)
         print(ledPos)
+
+        if ledPos is None:
+            print(f"Invalid clue: '{clue}' — not found in cluePanelLED")
 
         # Get potentiometer position from the mux
         for i, pin in enumerate(MUX_select_pins):
             pin.value((panelID >> i) & 1)  # Set the pin value based on the channel bits
         
         #Check the reading of the potentiometer from the mux
-        adc_value = ADC0_MUX.read_u16()  # Read ADC 
-        percentage = (adc_value / 65535) * 100 # convert to percent 
-        brightness = readPotentiometer(panelID)
-        color = LED_COLORS("White")
-        apply_brightness = tuple(int(c * brightness) for c in LED_COLORS("White"))
-        panel[panelID][ledPos] = apply_brightness
+        # adc_value = ADC0_MUX.read_u16()  # Read ADC 
+        # percentage = (adc_value / 65535) * 100 # convert to percent 
+        # brightness = readPotentiometer(panelID)
+        # color = (255, 255, 255)
+        # apply_brightness = tuple(int(c * brightness) for c in (255,255,255))
+        panel[panelID][ledPos] = (255,255,255)
         panel[panelID].write()
 
-    def turn_off(panelID):
-        panel[panelID] = (0, 0, 0)
-        panel[panelID].write()
+    def turn_off(self, panelID):
+        panel[self.panelID].fill((0, 0, 0))
+        panel[self.panelID].write()
 
-    def test_panel(panelID):
+    def test_panel(self):
         # Turn on all the LEDs on the panel for 2 seconds and then turn them off
-        panel[panelID] = (255, 255, 255)
-        panel[panelID].write()
+        panel[self.panelID].fill((255, 255, 255))
+        panel[self.panelID].write()
         sleep(2)
-        panel[panelID] = (0, 0, 0)
-        panel[panelID].write()
+        panel[self.panelID].fill((0, 0, 0))
+        panel[self.panelID].write()
 
     def _apply_brightness(self):
         """Reapply brightness scaling to all lit LEDs."""
@@ -102,7 +105,7 @@ SPINNER_LED_COLORS = {
 
 def is_spinner_button_pressed():
     pin_state = read_pin(i2c_buses[2], 0x23, 8) # PCF board 4 pin 8
-    print(pin_state)
+    # print(pin_state)
     if pin_state == 0:
         print("Pressed")
         return True
@@ -134,11 +137,11 @@ def playSpinnerSpinAndStop():
     while delay < 0.2:
         # Turn off all spinner LEDs
         for j in range(total_spinner_leds):
-            Board_pixels[spinner_start_index + j] = (0, 0, 0)
+            Spinner_pixels[j] = (0, 0, 0)
 
         # Light up the current spinner LED using the color from SPINNER_LED_COLORS
-        Board_pixels[spinner_start_index + current_led] = SPINNER_LED_COLORS.get(current_led, (255, 0, 0))  # Default red
-        Board_pixels.write()
+        Spinner_pixels[current_led] = SPINNER_LED_COLORS.get(current_led, (255, 0, 0))  # Default red
+        Spinner_pixels.write()
         sleep(delay)
 
         # Move to the next spinner LED
@@ -151,11 +154,11 @@ def playSpinnerSpinAndStop():
     while current_led != random_stop:
         # Turn off all spinner LEDs
         for j in range(total_spinner_leds):
-            Board_pixels[spinner_start_index + j] = (0, 0, 0)
+            Spinner_pixels[j] = (0, 0, 0)
 
         # Light up the current spinner LED
-        Board_pixels[spinner_start_index + current_led] = SPINNER_LED_COLORS.get(current_led, (255, 0, 0))  # Default red
-        Board_pixels.write()
+        Spinner_pixels[current_led] = SPINNER_LED_COLORS.get(current_led, (255, 0, 0))  # Default red
+        Spinner_pixels.write()
         sleep(delay)
 
         # Move to the next spinner LED
@@ -163,50 +166,50 @@ def playSpinnerSpinAndStop():
 
     # Handle the final spinner stop actions
     for j in range(total_spinner_leds):
-        Board_pixels[spinner_start_index + j] = (0, 0, 0)  # Turn off all LEDs
+        Spinner_pixels[j] = (0, 0, 0)  # Turn off all LEDs
 
     # Determine behavior based on the stopping position
-    final_led_index = spinner_start_index + random_stop
+    final_led_index = random_stop
     if random_stop == 0:
         # Make LED white and return "white"
-        Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
-        Board_pixels.write()
+        Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
+        Spinner_pixels.write()
         return "white"
-    elif random_stop in {1, 4}:
-        # Make LED blue and blink 2 times, return 2
-        for _ in range(2):
-            Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
-            Board_pixels.write()
-            sleep(0.3)
-            Board_pixels[final_led_index] = (0, 0, 0)
-            Board_pixels.write()
-            sleep(0.3)
-        return 2
-    elif random_stop == 2:
-        # Make LED blue and blink 4 times, return 4
-        for _ in range(4):
-            Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
-            Board_pixels.write()
-            sleep(0.3)
-            Board_pixels[final_led_index] = (0, 0, 0)
-            Board_pixels.write()
-            sleep(0.3)
-        return 4
-    elif random_stop == 3:
-        # Make LED yellow and return "yellow"
-        Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
-        Board_pixels.write()
-        return "yellow"
-    elif random_stop == 5:
+    elif random_stop == 1:
         # Make LED blue and blink 3 times, return 3
         for _ in range(3):
-            Board_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
-            Board_pixels.write()
+            Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
+            Spinner_pixels.write()
             sleep(0.3)
-            Board_pixels[final_led_index] = (0, 0, 0)
-            Board_pixels.write()
+            Spinner_pixels[final_led_index] = (0, 0, 0)
+            Spinner_pixels.write()
             sleep(0.3)
         return 3
+    elif random_stop == 2 or 5:
+        # Make LED blue and blink 4 times, return 4
+        for _ in range(2):
+            Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
+            Spinner_pixels.write()
+            sleep(0.3)
+            Spinner_pixels[final_led_index] = (0, 0, 0)
+            Spinner_pixels.write()
+            sleep(0.3)
+        return 2
+    elif random_stop == 3:
+        # Make LED yellow and return "yellow"
+        Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
+        Spinner_pixels.write()
+        return "yellow"
+    elif random_stop == 4:
+        # Make LED blue and blink 3 times, return 3
+        for _ in range(4):
+            Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
+            Spinner_pixels.write()
+            sleep(0.3)
+            Spinner_pixels[final_led_index] = (0, 0, 0)
+            Spinner_pixels.write()
+            sleep(0.3)
+        return 4
 
 ################################################################
 
@@ -459,9 +462,9 @@ def testFunction():
         if user_input == "1":
             print("Testing panel LEDs...")
             # Use the test function in the panel class to test the panels. Loop through all 6 panels
-            
+            for i in range(6): # assume 6 panels
+                panel_instance = Panel(i)
             for panelID in panel.keys():
-                panel_instance = Panel(panelID)
                 panel_instance.test_panel()
             print("Test complete")
 
@@ -522,16 +525,18 @@ def testFunction():
             
             # Fetch the corresponding piece and furniture from the dictionary
             item_name = identify_rfid(card)
+            print(item_name)
 
             if item_name:
-                panel_instance = Panel(panel)
                 print(f"Identified {item_name}!")
                 # Light up panel LED with that clue (we'll just do all the panels I guess..)
-                for i in range(1, len(panel)):
-                    panel.lightLED(item_name, i)
-                    print(f"LED {panel[i]}")
-                    sleep(1)
-                    panel.turn_off(i)
+                for i in range(1, 6):
+                    panel_instance = Panel(i)
+                    panel_instance.lightLED(item_name, i)
+                    print(f"LED on panel {i} lit")
+                    # sleep(1)
+                    # panel_instance.turn_off(i)
+                    # print(f"LED on panel {i} unlit")
                     
 
             # This is for the testing tags and cards. 
@@ -573,9 +578,9 @@ def testFunction():
     elif user_input == "6":
         print("Waiting for button press to spin...")
         while True:
-            btnInput = readButtons()
-            print(readButtons())
-            if btnInput == 5:
+            btnInput = is_spinner_button_pressed()
+            # print(is_spinner_button_pressed())
+            if is_spinner_button_pressed():
                 print("Button pressed! Spinning...")
                 result = playSpinnerSpinAndStop()
                 print(f"Spinner result: {result}")
@@ -717,10 +722,10 @@ def GameSetup():
 # Begin main function
 
 def main():
-    # while True:
-    # #Test function
+    while True:
+    #Test function
     #     # print(is_spinner_button_pressed())
-    #     # testFunction()
+        testFunction()
     #     character_assignments, furniture_assignments = randomizeClues()
     #     print(character_assignments)
     #     print(furniture_assignments)
@@ -729,7 +734,7 @@ def main():
     ##############################################################
     
     # Always loop checking the pot reading
-    start_new_thread(pot_reader_loop, ())
+    # start_new_thread(pot_reader_loop, ())
 
     
     
@@ -737,9 +742,10 @@ def main():
     print("Initializing game hardware...")
 
     # 2. Initialize NeoPixel LED board to all off.
-    # for i in range(len(Board_pixels)):
-    #     Board_pixels[i] = (0, 0, 0)
+    # Board_pixels.fill((0, 0, 0))
     # Board_pixels.write()
+
+    StartupProcess()
 
     # 3. Call GameSetup to:
     #    - Wait for all character and furniture pieces to be placed correctly
@@ -750,10 +756,11 @@ def main():
     # Randomize clues
     character_assignments, furniture_assignments = randomizeClues()
 
-    Board_pixels[i] = (0, 0, 0)
-    Board_pixels.write()
+    # Board_pixels.fill() = (0, 0, 0)
+    # Board_pixels.write()
 
     StartupProcess()
+
 
     # 4. Setup is complete, print a summary
     print(f"{len(players)} player(s) have joined the game.")

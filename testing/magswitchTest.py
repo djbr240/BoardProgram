@@ -6,7 +6,7 @@ i2c_buses = [
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP8 and GP9
     I2C(0, scl=Pin(9), sda=Pin(8), freq=400000),  # I2C on GP6 and GP7
-    # I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  # I2C on GP6 and GP7
+    I2C(0, scl=Pin(9), sda=Pin(8), freq=400000)  # I2C on GP6 and GP7
 
 ]
 
