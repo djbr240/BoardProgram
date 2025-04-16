@@ -170,6 +170,7 @@ def playSpinnerSpinAndStop():
 
     # Determine behavior based on the stopping position
     final_led_index = random_stop
+    print(random_stop)
     if random_stop == 0:
         # Make LED white and return "white"
         Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
@@ -185,16 +186,7 @@ def playSpinnerSpinAndStop():
             Spinner_pixels.write()
             sleep(0.3)
         return 3
-    elif random_stop == 2 or 5:
-        # Make LED blue and blink 4 times, return 4
-        for _ in range(2):
-            Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
-            Spinner_pixels.write()
-            sleep(0.3)
-            Spinner_pixels[final_led_index] = (0, 0, 0)
-            Spinner_pixels.write()
-            sleep(0.3)
-        return 2
+    
     elif random_stop == 3:
         # Make LED yellow and return "yellow"
         Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
@@ -210,6 +202,17 @@ def playSpinnerSpinAndStop():
             Spinner_pixels.write()
             sleep(0.3)
         return 4
+    
+    elif random_stop == 2 or 5:
+        # Make LED blue and blink 4 times, return 4
+        for _ in range(2):
+            Spinner_pixels[final_led_index] = SPINNER_LED_COLORS[random_stop]
+            Spinner_pixels.write()
+            sleep(0.3)
+            Spinner_pixels[final_led_index] = (0, 0, 0)
+            Spinner_pixels.write()
+            sleep(0.3)
+        return 2
 
 ################################################################
 
