@@ -7,10 +7,10 @@ adc = ADC(Pin(26))  # ADC pin connected to the SIG pin of all MUXes
 
 # GPIO pins for MUX select lines (shared by all MUXes)
 select_pins = [
-    Pin(4, Pin.OUT),  # S0
-    Pin(5, Pin.OUT),  # S1
-    Pin(6, Pin.OUT),  # S2
-    Pin(7, Pin.OUT),  # S3
+    Pin(10, Pin.OUT),  # S0
+    Pin(11, Pin.OUT),  # S1
+    Pin(12, Pin.OUT),  # S2
+    Pin(13, Pin.OUT),  # S3
 ]
 
 # NeoPixel configuration

@@ -64,8 +64,8 @@ def detectPanels():
     for pin in range(6):
         # Read the state of the current pin
         state = read_pcf()[pin + 58]
-        # If the pin is high, it means a panel is present
-        if state:
+        # If the pin is low, it means a panel is present. Because the PCF defaults high, we look for opposite
+        if not state:
             detectedPanels.append(pin + 1)
             print(f"Panel {pin + 1} detected")
     return detectedPanels
@@ -102,7 +102,7 @@ SPINNER_LED_COLORS = {
 
 def is_spinner_button_pressed():
     pin_state = read_pin(i2c_buses[2], 0x23, 8) # PCF board 4 pin 8
-    print(pin_state)
+    # print(pin_state)
     if pin_state == 0:
         print("Pressed")
         return True
@@ -446,7 +446,7 @@ def testFunction():
     if user_input == "1":
         print("Testing board LEDs (5 seconds)...")
         # Light up all board LEDs (dim white)
-        Board_pixels.fill((25, 25, 25))
+        Board_pixels.fill((255, 255, 255))
         Board_pixels.write()
         sleep(5)
         Board_pixels.fill((0, 0, 0))
@@ -573,9 +573,9 @@ def testFunction():
     elif user_input == "6":
         print("Waiting for button press to spin...")
         while True:
-            btnInput = readButtons()
-            print(readButtons())
-            if btnInput == 5:
+            # btnInput = readButtons()
+            # print(readButtons())
+            if is_spinner_button_pressed():
                 print("Button pressed! Spinning...")
                 result = playSpinnerSpinAndStop()
                 print(f"Spinner result: {result}")
@@ -673,9 +673,9 @@ def GameSetup():
             Board_pixels[position] = LED_COLORS["White"]
             Board_pixels.write()
 
-            # position = read_pcf()
+            position = read_pcf()
             print(position)
-            if not read_magnet_switches() == position:
+            if read_magnet_switches() == position:
                 placed_characters.add(rfid)
                 print(f"{name} correctly placed.")
             else:
@@ -717,10 +717,10 @@ def GameSetup():
 # Begin main function
 
 def main():
-    # while True:
+    while True:
     # #Test function
     #     # print(is_spinner_button_pressed())
-    #     # testFunction()
+        testFunction()
     #     character_assignments, furniture_assignments = randomizeClues()
     #     print(character_assignments)
     #     print(furniture_assignments)
@@ -750,7 +750,7 @@ def main():
     # Randomize clues
     character_assignments, furniture_assignments = randomizeClues()
 
-    Board_pixels[i] = (0, 0, 0)
+    Board_pixels.fill((0, 0, 0))
     Board_pixels.write()
 
     StartupProcess()
@@ -846,7 +846,9 @@ def main():
                         print("Error: Incorrect piece scanned (should be yellow).")
                         for i in range(3):
                             light_up_yellow_spaces()
-                            Board_pixels = (0, 0, 0)
+                            sleep(1)
+                            Board_pixels.fill((0, 0, 0))
+                            Board_pixels.write()
                         continue
 
                     # Update player's panel
