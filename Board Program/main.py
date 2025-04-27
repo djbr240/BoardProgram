@@ -418,10 +418,17 @@ def accusationSystem(furniture_assignment, character_assignment):
     # TODO
 
     # General structure of the accusation system
+    accusedClues = set()
 
     # Wait for RFID scan 1
+    accusedClues.add(identify_rfid(readRFID()))
+
     # Wait for RFID scan 2
+    accusedClues.add(identify_rfid(readRFID()))
+
     # Wait for RFID scan 3
+    accusedClues.add(identify_rfid(readRFID()))
+
     # (make sure in general the the kinds of cards scanned are right, but it doesn't matter what order the cards are scanned in)
     # Check result and compare it to the answer
     # If correct
@@ -725,10 +732,10 @@ def GameSetup():
 # Begin main function
 
 def main():
-    while True:
+    # while True:
     #Test function
     #     # print(is_spinner_button_pressed())
-        testFunction()
+        # testFunction()
     #     character_assignments, furniture_assignments = randomizeClues()
     #     print(character_assignments)
     #     print(furniture_assignments)
