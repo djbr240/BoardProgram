@@ -453,7 +453,8 @@ def testFunction():
     print("7: Button test")
     
     # Get user input
-    user_input = input("Enter your choice: ")
+    # user_input = input("Enter your choice: ")
+    user_input = "5"
     
     # Make a switch case for each option
     if user_input == "1":
@@ -732,10 +733,10 @@ def GameSetup():
 # Begin main function
 
 def main():
-    # while True:
+    while True:
     #Test function
     #     # print(is_spinner_button_pressed())
-        # testFunction()
+        testFunction()
     #     character_assignments, furniture_assignments = randomizeClues()
     #     print(character_assignments)
     #     print(furniture_assignments)
@@ -766,8 +767,8 @@ def main():
     # Randomize clues
     character_assignments, furniture_assignments = randomizeClues()
 
-    # Board_pixels.fill() = (0, 0, 0)
-    # Board_pixels.write()
+    Board_pixels.fill((0, 0, 0))
+    Board_pixels.write()
 
     StartupProcess()
 
