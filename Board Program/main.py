@@ -623,8 +623,7 @@ def demo():
     print("1: Game setup")
     print("2: Magnet Switch demo")
     print("3: Pathfinder demo")
-    print("4: Panel demo")
-    print("5: RFID demo")
+    print("4: Gameplay demo")
     
     user_input = input("Enter your choice: ")
     
@@ -747,9 +746,6 @@ def demo():
         print("Test complete")
         
     elif user_input == "4":
-        print("Panel test")
-        
-    elif user_input == "5":
         while True:
             card = readRFID()
 
