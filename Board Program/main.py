@@ -453,8 +453,8 @@ def testFunction():
     print("7: Button test")
     
     # Get user input
-    # user_input = input("Enter your choice: ")
-    user_input = "5"
+    user_input = input("Enter your choice: ")
+    # user_input = "5"
     
     # Make a switch case for each option
     if user_input == "1":
@@ -618,7 +618,159 @@ def testFunction():
     else:
         print("Invalid choice. Please try again.")
 
+def demo():
+    print("Demo options:")
+    print("1: Game setup")
+    print("2: Magnet Switch demo")
+    print("3: Pathfinder demo")
+    print("4: Panel demo")
+    print("5: RFID demo")
+    
+    user_input = input("Enter your choice: ")
+    
+    if user_input == "1":
+        GameSetup()
+        
+    elif user_input == "2":
+        while True:
+            print("Testing Magnet Switches...")
+            # Read Magnet Switches and get detected positions
+            detected_raw = read_magnet_switches()
+            print("Detected positions:", detected_raw)
+            # sleep(1)
+            detected_positions = [i for i, val in enumerate(detected_raw) if val == 0]
+            print(detected_positions)
 
+            # Test LEDs based on detected positions
+            for i in range(len(detected_positions)):
+                if i not in detected_positions:
+                    Board_pixels[i] = (255, 255, 255)  # Green for detected positions
+                    Board_pixels.write()
+                else:
+                    Board_pixels[i] = (0, 0, 0)  # Off if not detected
+                    Board_pixels.write()
+            sleep(0.1)
+    elif user_input == "3":
+        # Invert the RFID mappings to look up piece/furniture by scanned RFID
+        rfid_to_character = {v: k for k, v in pieceRFID.items()}
+        rfid_to_furniture = {v: k for k, v in furnitureRFID.items()}
+        
+        while True:
+            # Randomize clues
+            character_assignments, furniture_assignments = randomizeClues()
+            
+            # Lookup dictionaries from the assignments
+            character_to_toy = dict(character_assignments)    # character -> toy
+            furniture_to_time = dict(furniture_assignments)   # furniture -> time
+            
+            print("Place piece on space 20")
+            space_number = 20
+            Board_pixels[20] = (255,255,255)
+            Board_pixels.write()
+            
+            print("Press spinner button")
+            while not is_spinner_button_pressed():
+                sleep(0.1)
+                
+            roll_number = playSpinnerSpinAndStop()
+            
+            
+            if not roll_number == "white" or "yellow":
+                print("Lighting path...")
+                light_up_path(space_number, int(roll_number))
+            elif roll_number == "white":
+                light_up_white_spaces()
+                
+                print("Scan a white piece...")
+            
+                # Use the readRFID function to read the RFID tag
+                rfid = readRFID()
+                print(f"Scanned RFID: {rfid}")
+
+                if rfid in rfid_to_character:
+                    name = rfid_to_character[rfid]
+                    clueAssignment = character_to_toy.get(name)
+                    clueCharacterPosition = cluePanelLED[name]
+                    clueToyPosition = cluePanelLED[clueAssignment]
+                    print(f"{name} character detected. Light up position {clueCharacterPosition} and {clueToyPosition} on panel")
+                    Panel1_pixels[clueCharacterPosition] = LED_COLORS["White"]
+                    Panel1_pixels.write()
+                    Panel1_pixels[clueToyPosition] = LED_COLORS["White"]
+                    Panel1_pixels.write()
+
+                elif rfid in rfid_to_furniture:
+                    print("You scanned a furniture piece.")
+                    print("Scan a character piece")
+                    for i in range (5):
+                        light_up_white_spaces()
+                        sleep(.5)
+                        Board_pixels.fill((0,0,0))
+                        Board_pixels.write()
+
+                else:
+                    print("Unknown piece scanned.")
+
+                utime.sleep(0.2)
+            elif roll_number == "yellow":
+                light_up_yellow_spaces()
+                
+                print("Scan a yellow piece...")
+            
+                # Use the readRFID function to read the RFID tag
+                rfid = readRFID()
+                print(f"Scanned RFID: {rfid}")
+
+                if rfid in rfid_to_furniture:
+                    name = rfid_to_furniture[rfid]
+                    clueAssignment = furniture_to_time.get(name)
+                    clueFurniturePosition = cluePanelLED[name]
+                    clueTimePosition = cluePanelLED[clueAssignment]
+                    print(f"{name} character detected. Light up position {clueFurniturePosition} and {clueTimePosition} on panel")
+                    Panel1_pixels[clueFurniturePosition] = LED_COLORS["White"]
+                    Panel1_pixels.write()
+                    Panel1_pixels[clueTimePosition] = LED_COLORS["White"]
+                    Panel1_pixels.write()
+
+                elif rfid in rfid_to_character:
+                    print("You scanned a character piece.")
+                    print("Scan a furniture piece")
+                    for i in range (5):
+                        light_up_yellow_spaces()
+                        sleep(.5)
+                        Board_pixels.fill((0,0,0))
+                        Board_pixels.write()
+            
+        #sleep(5)
+        input("Press enter to continue")
+        Board_pixels.fill((0,0,0))
+        Board_pixels.write()
+        print("Test complete")
+        
+    elif user_input == "4":
+        print("Panel test")
+        
+    elif user_input == "5":
+        while True:
+            card = readRFID()
+
+            
+            # Fetch the corresponding piece and furniture from the dictionary
+            item_name = identify_rfid(card)
+            print(item_name)
+
+            if item_name:
+                print(f"Identified {item_name}!")
+                # Light up panel LED with that clue (we'll just do all the panels I guess..)
+                for i in range(1, 6):
+                    panel_instance = Panel(i)
+                    panel_instance.lightLED(item_name, i)
+                    print(f"LED on panel {i} lit")
+                    # sleep(1)
+                    # panel_instance.turn_off(i)
+                    # print(f"LED on panel {i} unlit")
+    else:
+        print("Invalid input")
+    
 
 ########################################################################
 
@@ -736,7 +888,8 @@ def main():
     while True:
     #Test function
     #     # print(is_spinner_button_pressed())
-        testFunction()
+        # testFunction()
+        demo()
     #     character_assignments, furniture_assignments = randomizeClues()
     #     print(character_assignments)
     #     print(furniture_assignments)
@@ -808,7 +961,7 @@ def main():
                 player.add_clue(clue)
                 player.update_panel()
 
-                # If player presses accusation button, call accusation function
+                # If player scans a piece, call accusation function
                 if readRFID:
                     accusationResult = accusationSystem(readRFID())
                     if accusationResult != 0:
