@@ -573,7 +573,7 @@ def testFunction():
             detected_raw = read_magnet_switches()
             print("Detected positions:", detected_raw)
             # sleep(1)
-            detected_positions = [i for i, val in enumerate(detected_raw) if val == 1]
+            detected_positions = [i for i, val in enumerate(detected_raw) if val == 0]
             print(detected_positions)
 
             # Test LEDs based on detected positions
