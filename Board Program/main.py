@@ -642,7 +642,7 @@ def demo():
 
             # Test LEDs based on detected positions
             for i in range(len(detected_positions)):
-                if i not in detected_positions:
+                if i in detected_positions:
                     Board_pixels[i] = (255, 255, 255)  # Green for detected positions
                     Board_pixels.write()
                 else:
@@ -671,10 +671,13 @@ def demo():
             while not is_spinner_button_pressed():
                 sleep(0.1)
                 
+            Board_pixels.fill((0,0,0))
+            Board_pixels.write()
+
             roll_number = playSpinnerSpinAndStop()
             
             
-            if not roll_number == "white" or "yellow":
+            if isinstance(roll_number, int):
                 print("Lighting path...")
                 light_up_path(space_number, int(roll_number))
             elif roll_number == "white":
@@ -693,9 +696,12 @@ def demo():
                     clueToyPosition = cluePanelLED[clueAssignment]
                     print(f"{name} character detected. Light up position {clueCharacterPosition} and {clueToyPosition} on panel")
                     Panel1_pixels[clueCharacterPosition] = LED_COLORS["White"]
-                    Panel1_pixels.write()
+                    # Panel1_pixels.write()
                     Panel1_pixels[clueToyPosition] = LED_COLORS["White"]
                     Panel1_pixels.write()
+                    sleep(3)
+                    Board_pixels.fill((0,0,0))
+                    Board_pixels.write()
 
                 elif rfid in rfid_to_furniture:
                     print("You scanned a furniture piece.")
@@ -724,11 +730,14 @@ def demo():
                     clueAssignment = furniture_to_time.get(name)
                     clueFurniturePosition = cluePanelLED[name]
                     clueTimePosition = cluePanelLED[clueAssignment]
-                    print(f"{name} character detected. Light up position {clueFurniturePosition} and {clueTimePosition} on panel")
+                    print(f"{name} piece detected. Light up position {clueFurniturePosition} and {clueTimePosition} on panel")
                     Panel1_pixels[clueFurniturePosition] = LED_COLORS["White"]
-                    Panel1_pixels.write()
+                    # Panel1_pixels.write()
                     Panel1_pixels[clueTimePosition] = LED_COLORS["White"]
                     Panel1_pixels.write()
+                    sleep(3)
+                    Board_pixels.fill((0,0,0))
+                    Board_pixels.write()
 
                 elif rfid in rfid_to_character:
                     print("You scanned a character piece.")
@@ -881,6 +890,7 @@ def GameSetup():
 # Begin main function
 
 def main():
+    StartupProcess()
     while True:
     #Test function
     #     # print(is_spinner_button_pressed())
