@@ -3,14 +3,14 @@ from neopixel import NeoPixel
 from time import sleep
 
 # Initialize ADC for MUX SIG output
-adc = ADC(Pin(26))  # ADC pin connected to the MUX SIG output
+adc = ADC(Pin(28))  # ADC pin connected to the MUX SIG output
 
 # GPIO pins for MUX select lines
 select_pins = [
-    Pin(0, Pin.OUT),  # S0
-    Pin(1, Pin.OUT),  # S1
-    Pin(2, Pin.OUT),  # S2
-    Pin(3, Pin.OUT),  # S3
+    Pin(10, Pin.OUT),  # S0
+    Pin(11, Pin.OUT),  # S1
+    Pin(12, Pin.OUT),  # S2
+    Pin(13, Pin.OUT),  # S3
 ]
 
 # NeoPixel configuration

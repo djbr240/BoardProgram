@@ -572,7 +572,7 @@ def testFunction():
             detected_raw = read_magnet_switches()
             print("Detected positions:", detected_raw)
             # sleep(1)
-            detected_positions = [i for i, val in enumerate(detected_raw) if val == 1]
+            detected_positions = [i for i, val in enumerate(detected_raw) if val == 0]
             print(detected_positions)
 
             # Test LEDs based on detected positions
@@ -732,10 +732,10 @@ def GameSetup():
 # Begin main function
 
 def main():
-    # while True:
+    while True:
     #Test function
     #     # print(is_spinner_button_pressed())
-        # testFunction()
+        testFunction()
     #     character_assignments, furniture_assignments = randomizeClues()
     #     print(character_assignments)
     #     print(furniture_assignments)
